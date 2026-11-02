@@ -1,6 +1,6 @@
 
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -16,32 +16,83 @@
 html, body {
   width: 100%;
   height: 100%;
-  background: black;
+  background: #000;
+  color: white;
   overflow: hidden;
+  font-family: Arial, sans-serif;
 }
 
-#feed {
+header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 58px;
+  z-index: 10;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 35px;
+  background: linear-gradient(#000, #000000aa);
+}
+
+.tab {
+  color: #999;
+  font-size: 17px;
+  font-weight: bold;
+  height: 58px;
+  display: flex;
+  align-items: center;
+  position: relative;
+  cursor: pointer;
+}
+
+.tab.active {
+  color: white;
+}
+
+.tab.active::after {
+  content: "";
+  position: absolute;
+  bottom: 7px;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: white;
+  border-radius: 10px;
+}
+
+.section {
+  display: none;
   width: 100%;
   height: 100%;
-  height: 100dvh;
+}
+
+.section.active {
+  display: block;
+}
+
+.feed {
+  width: 100%;
+  height: 100%;
   overflow-y: auto;
   overflow-x: hidden;
   scroll-snap-type: y mandatory;
-  -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
 }
 
-#feed::-webkit-scrollbar {
+.feed::-webkit-scrollbar {
   display: none;
 }
 
 .video-box {
   width: 100%;
-  height: 100%;
+  height: 100vh;
   height: 100dvh;
+  background: black;
   scroll-snap-align: start;
   scroll-snap-stop: always;
-  background: black;
 }
 
 video {
@@ -50,51 +101,110 @@ video {
   object-fit: contain;
   display: block;
 }
+
+.empty {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #888;
+  font-size: 18px;
+}
 </style>
 </head>
 
 <body>
 
-<div id="feed">
+<header>
+  <div class="tab active" onclick="changeTab('forYou', this)">لك</div>
+  <div class="tab" onclick="changeTab('anime', this)">أنمي</div>
+  <div class="tab" onclick="changeTab('movies', this)">أفلام</div>
+</header>
 
-  <div class="video-box">
-    <video playsinline muted loop controls preload="metadata">
-      <source src="./2026-10-21-131624724.mp4" type="video/mp4">
-    </video>
+<!-- قسم لك -->
+<div id="forYou" class="section active">
+  <div class="feed">
+
+    <div class="video-box">
+      <video playsinline muted loop controls preload="metadata">
+        <source src="./2026-10-21-131624724.mp4" type="video/mp4">
+      </video>
+    </div>
+
+    <div class="video-box">
+      <video playsinline muted loop controls preload="metadata">
+        <source src="./video2.mp4" type="video/mp4">
+      </video>
+    </div>
+
   </div>
+</div>
 
-  <div class="video-box">
-    <video playsinline muted loop controls preload="metadata">
-      <source src="./video2.mp4" type="video/mp4">
-    </video>
-  </div>
+<!-- قسم أنمي -->
+<div id="anime" class="section">
+  <div class="empty">لا توجد فيديوهات أنمي حالياً</div>
+</div>
 
+<!-- قسم أفلام -->
+<div id="movies" class="section">
+  <div class="empty">لا توجد فيديوهات أفلام حالياً</div>
 </div>
 
 <script>
-const feed = document.getElementById("feed");
-const videos = [...document.querySelectorAll("video")];
+const allVideos = document.querySelectorAll("video");
 
-const observer = new IntersectionObserver(entries => {
-  entries.forEach(entry => {
-    const video = entry.target;
+function stopAllVideos() {
+  allVideos.forEach(video => video.pause());
+}
 
-    if (entry.isIntersecting) {
-      videos.forEach(other => {
-        if (other !== video) other.pause();
-      });
+function changeTab(id, tab) {
+  stopAllVideos();
 
-      video.play().catch(() => {});
-    } else {
-      video.pause();
-    }
+  document.querySelectorAll(".section").forEach(section => {
+    section.classList.remove("active");
   });
-}, {
-  root: feed,
-  threshold: 0.7
-});
 
-videos.forEach(video => observer.observe(video));
+  document.querySelectorAll(".tab").forEach(item => {
+    item.classList.remove("active");
+  });
+
+  document.getElementById(id).classList.add("active");
+  tab.classList.add("active");
+
+  const feed = document.querySelector("#" + id + " .feed");
+
+  if (feed) {
+    const videos = feed.querySelectorAll("video");
+
+    if (videos.length > 0) {
+      videos[0].play().catch(() => {});
+    }
+  }
+}
+
+document.querySelectorAll(".feed").forEach(feed => {
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      const video = entry.target;
+
+      if (entry.isIntersecting &&
+          feed.closest(".section").classList.contains("active")) {
+        stopAllVideos();
+        video.play().catch(() => {});
+      } else {
+        video.pause();
+      }
+    });
+  }, {
+    root: feed,
+    threshold: 0.7
+  });
+
+  feed.querySelectorAll("video").forEach(video => {
+    observer.observe(video);
+  });
+});
 </script>
 
 </body>
