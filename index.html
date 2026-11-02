@@ -22,13 +22,9 @@ html, body {
 
 #feed {
   width: 100%;
-  height: 100vh;
-  height: 100dvh;
-  overflow-y: scroll;
-  overflow-x: hidden;
+  height: 100%;
+  overflow-y: auto;
   scroll-snap-type: y mandatory;
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior-y: contain;
   scrollbar-width: none;
 }
 
@@ -38,12 +34,11 @@ html, body {
 
 .video-box {
   width: 100%;
-  height: 100vh;
+  height: 100%;
   height: 100dvh;
-  position: relative;
   scroll-snap-align: start;
-  scroll-snap-stop: always;
   background: black;
+  position: relative;
 }
 
 video {
@@ -51,6 +46,35 @@ video {
   height: 100%;
   object-fit: contain;
   display: block;
+}
+
+.navigation {
+  position: fixed;
+  left: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.navigation button {
+  width: 48px;
+  height: 48px;
+  border: 1px solid #ffffff55;
+  border-radius: 50%;
+  background: #222222bb;
+  color: white;
+  font-size: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.navigation button:active {
+  background: #555;
+  transform: scale(0.9);
 }
 </style>
 </head>
@@ -73,30 +97,54 @@ video {
 
 </div>
 
+<div class="navigation">
+  <button onclick="moveVideo(-1)" aria-label="الفيديو السابق">↑</button>
+  <button onclick="moveVideo(1)" aria-label="الفيديو التالي">↓</button>
+</div>
+
 <script>
 const feed = document.getElementById("feed");
 const videos = [...document.querySelectorAll("video")];
 
-const observer = new IntersectionObserver(entries => {
-  entries.forEach(entry => {
-    const video = entry.target;
+let current = 0;
+let moving = false;
 
-    if (entry.isIntersecting) {
-      videos.forEach(other => {
-        if (other !== video) other.pause();
-      });
+function moveVideo(direction) {
+  if (moving) return;
 
-      video.play().catch(() => {});
-    } else {
-      video.pause();
-    }
+  const next = current + direction;
+
+  if (next < 0 || next >= videos.length) return;
+
+  current = next;
+  moving = true;
+
+  feed.scrollTo({
+    top: current * feed.clientHeight,
+    behavior: "smooth"
   });
-}, {
-  root: feed,
-  threshold: 0.7
-});
 
-videos.forEach(video => observer.observe(video));
+  videos.forEach((video, index) => {
+    if (index !== current) video.pause();
+  });
+
+  setTimeout(() => {
+    videos[current].play().catch(() => {});
+    moving = false;
+  }, 400);
+}
+
+feed.addEventListener("scroll", () => {
+  const index = Math.round(feed.scrollTop / feed.clientHeight);
+
+  if (index >= 0 && index < videos.length && index !== current) {
+    current = index;
+    videos.forEach((video, i) => {
+      if (i !== current) video.pause();
+    });
+    videos[current].play().catch(() => {});
+  }
+});
 </script>
 
 </body>
