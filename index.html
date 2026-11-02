@@ -18,31 +18,26 @@ html, body {
   height: 100%;
   background: black;
   overflow: hidden;
-  touch-action: pan-y;
 }
 
 #feed {
   width: 100%;
   height: 100dvh;
-  overflow-y: auto;
-  overflow-x: hidden;
-  scroll-snap-type: y mandatory;
-  overscroll-behavior-y: contain;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-}
-
-#feed::-webkit-scrollbar {
-  display: none;
+  overflow: hidden;
+  position: relative;
 }
 
 .video-box {
   width: 100%;
-  height: 100dvh;
-  scroll-snap-align: start;
-  scroll-snap-stop: always;
-  position: relative;
+  height: 100%;
+  position: absolute;
+  inset: 0;
   background: black;
+  display: none;
+}
+
+.video-box.active {
+  display: block;
 }
 
 video {
@@ -58,7 +53,7 @@ video {
 
 <div id="feed">
 
-  <div class="video-box">
+  <div class="video-box active">
     <video playsinline muted loop controls>
       <source src="./2026-10-21-131624724.mp4" type="video/mp4">
     </video>
@@ -73,29 +68,50 @@ video {
 </div>
 
 <script>
-const feed = document.getElementById("feed");
-const videos = document.querySelectorAll("video");
+const boxes = [...document.querySelectorAll(".video-box")];
+let current = 0;
+let startY = 0;
+let startX = 0;
+let changing = false;
 
-const observer = new IntersectionObserver(entries => {
-  entries.forEach(entry => {
-    const video = entry.target;
+function showVideo(index) {
+  if (index < 0 || index >= boxes.length || changing) return;
 
-    if (entry.isIntersecting) {
-      videos.forEach(other => {
-        if (other !== video) other.pause();
-      });
+  changing = true;
 
-      video.play().catch(() => {});
-    } else {
-      video.pause();
-    }
-  });
-}, {
-  root: feed,
-  threshold: 0.6
-});
+  boxes[current].querySelector("video").pause();
+  boxes[current].classList.remove("active");
 
-videos.forEach(video => observer.observe(video));
+  current = index;
+
+  boxes[current].classList.add("active");
+
+  const video = boxes[current].querySelector("video");
+  video.currentTime = 0;
+  video.play().catch(() => {});
+
+  setTimeout(() => changing = false, 350);
+}
+
+document.addEventListener("touchstart", e => {
+  startY = e.touches[0].clientY;
+  startX = e.touches[0].clientX;
+}, { passive: true });
+
+document.addEventListener("touchend", e => {
+  const endY = e.changedTouches[0].clientY;
+  const endX = e.changedTouches[0].clientX;
+
+  const diffY = startY - endY;
+  const diffX = startX - endX;
+
+  if (Math.abs(diffY) > 60 && Math.abs(diffY) > Math.abs(diffX)) {
+    if (diffY > 0) showVideo(current + 1);
+    else showVideo(current - 1);
+  }
+}, { passive: true });
+
+boxes[0].querySelector("video").play().catch(() => {});
 </script>
 
 </body>
