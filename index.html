@@ -3,7 +3,7 @@
 <html lang="ar">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>MOAD SHORTS</title>
 
 <style>
@@ -22,22 +22,28 @@ html, body {
 
 #feed {
   width: 100%;
+  height: 100vh;
   height: 100dvh;
-  overflow: hidden;
-  position: relative;
+  overflow-y: scroll;
+  overflow-x: hidden;
+  scroll-snap-type: y mandatory;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+  scrollbar-width: none;
+}
+
+#feed::-webkit-scrollbar {
+  display: none;
 }
 
 .video-box {
   width: 100%;
-  height: 100%;
-  position: absolute;
-  inset: 0;
+  height: 100vh;
+  height: 100dvh;
+  position: relative;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
   background: black;
-  display: none;
-}
-
-.video-box.active {
-  display: block;
 }
 
 video {
@@ -53,14 +59,14 @@ video {
 
 <div id="feed">
 
-  <div class="video-box active">
-    <video playsinline muted loop controls>
+  <div class="video-box">
+    <video playsinline muted loop controls preload="metadata">
       <source src="./2026-10-21-131624724.mp4" type="video/mp4">
     </video>
   </div>
 
   <div class="video-box">
-    <video playsinline muted loop controls>
+    <video playsinline muted loop controls preload="metadata">
       <source src="./video2.mp4" type="video/mp4">
     </video>
   </div>
@@ -68,50 +74,29 @@ video {
 </div>
 
 <script>
-const boxes = [...document.querySelectorAll(".video-box")];
-let current = 0;
-let startY = 0;
-let startX = 0;
-let changing = false;
+const feed = document.getElementById("feed");
+const videos = [...document.querySelectorAll("video")];
 
-function showVideo(index) {
-  if (index < 0 || index >= boxes.length || changing) return;
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(entry => {
+    const video = entry.target;
 
-  changing = true;
+    if (entry.isIntersecting) {
+      videos.forEach(other => {
+        if (other !== video) other.pause();
+      });
 
-  boxes[current].querySelector("video").pause();
-  boxes[current].classList.remove("active");
+      video.play().catch(() => {});
+    } else {
+      video.pause();
+    }
+  });
+}, {
+  root: feed,
+  threshold: 0.7
+});
 
-  current = index;
-
-  boxes[current].classList.add("active");
-
-  const video = boxes[current].querySelector("video");
-  video.currentTime = 0;
-  video.play().catch(() => {});
-
-  setTimeout(() => changing = false, 350);
-}
-
-document.addEventListener("touchstart", e => {
-  startY = e.touches[0].clientY;
-  startX = e.touches[0].clientX;
-}, { passive: true });
-
-document.addEventListener("touchend", e => {
-  const endY = e.changedTouches[0].clientY;
-  const endX = e.changedTouches[0].clientX;
-
-  const diffY = startY - endY;
-  const diffX = startX - endX;
-
-  if (Math.abs(diffY) > 60 && Math.abs(diffY) > Math.abs(diffX)) {
-    if (diffY > 0) showVideo(current + 1);
-    else showVideo(current - 1);
-  }
-}, { passive: true });
-
-boxes[0].querySelector("video").play().catch(() => {});
+videos.forEach(video => observer.observe(video));
 </script>
 
 </body>
