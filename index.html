@@ -28,12 +28,12 @@ header {
   left: 0;
   right: 0;
   height: 58px;
-  z-index: 10;
+  z-index: 1000;
   display: flex;
   justify-content: center;
   align-items: center;
   gap: 35px;
-  background: linear-gradient(#000, #000000aa);
+  background: #080808;
 }
 
 .tab {
@@ -114,16 +114,18 @@ video {
 
 #soundButton {
   position: fixed;
-  top: 70px;
+  top: 75px;
   left: 15px;
-  z-index: 20;
-  padding: 11px 16px;
-  border: 1px solid #ffffff55;
-  border-radius: 25px;
-  background: #222222dd;
+  z-index: 9999;
+  display: block;
+  padding: 13px 18px;
+  border: 2px solid white;
+  border-radius: 30px;
+  background: #222;
   color: white;
-  font-size: 14px;
+  font-size: 15px;
   font-weight: bold;
+  cursor: pointer;
 }
 </style>
 </head>
@@ -184,17 +186,6 @@ function getCurrentVideo() {
   return feed.querySelectorAll("video")[index] || null;
 }
 
-function playCurrentVideo() {
-  const video = getCurrentVideo();
-
-  stopAllVideos();
-
-  if (video) {
-    video.muted = !soundEnabled;
-    video.play().catch(() => {});
-  }
-}
-
 function toggleSound() {
   soundEnabled = !soundEnabled;
 
@@ -226,7 +217,17 @@ function changeTab(id, tab) {
   document.getElementById(id).classList.add("active");
   tab.classList.add("active");
 
-  playCurrentVideo();
+  const section = document.getElementById(id);
+  const feed = section.querySelector(".feed");
+
+  if (feed) {
+    const video = feed.querySelector("video");
+
+    if (video) {
+      video.muted = !soundEnabled;
+      video.play().catch(() => {});
+    }
+  }
 }
 
 document.querySelectorAll(".feed").forEach(feed => {
