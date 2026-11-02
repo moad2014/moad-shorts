@@ -3,38 +3,102 @@
 <html lang="ar">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>MOAD SHORTS</title>
 <style>
-*{margin:0;padding:0;box-sizing:border-box}
-html,body{
- width:100%;height:100%;
- background:#000;overflow:hidden;
+* { margin:0; padding:0; box-sizing:border-box; }
+html,body {
+  width:100%; height:100%;
+  background:#000; overflow:hidden;
 }
-.feed{
- width:100%;height:100dvh;
- overflow-y:auto;
- scroll-snap-type:y mandatory;
+.feed {
+  width:100%; height:100dvh;
+  overflow-y:scroll;
+  scroll-snap-type:y mandatory;
+  scrollbar-width:none;
 }
-.video-box{
- width:100%;height:100dvh;
- scroll-snap-align:start;
- background:#000;
+.feed::-webkit-scrollbar { display:none; }
+.video-box {
+  width:100%; height:100dvh;
+  position:relative;
+  scroll-snap-align:start;
+  background:#000;
 }
-video{
- width:100%;height:100%;
- object-fit:cover;
- display:block;
+video {
+  width:100%; height:100%;
+  object-fit:contain;
+  display:block;
+}
+.sound {
+  position:fixed;
+  bottom:25px;
+  left:50%;
+  transform:translateX(-50%);
+  z-index:10;
+  padding:13px 24px;
+  border:0;
+  border-radius:30px;
+  background:#fff;
+  color:#000;
+  font-size:17px;
+  font-weight:bold;
 }
 </style>
 </head>
 <body>
-<div class="feed">
-<div class="video-box">
-<video autoplay loop playsinline controls>
-<source src="./2026-10-21-131624724.mp4" type="video/mp4">
-</video>
+
+<div class="feed" id="feed">
+
+  <div class="video-box">
+    <video playsinline loop muted controls>
+      <source src="./2026-10-21-131624724.mp4" type="video/mp4">
+    </video>
+  </div>
+
+  <div class="video-box">
+    <video playsinline loop muted controls>
+      <source src="./video2.mp4" type="video/mp4">
+    </video>
+  </div>
+
 </div>
-</div>
+
+<button class="sound" id="sound">🔊 تشغيل الصوت</button>
+
+<script>
+const videos = document.querySelectorAll("video");
+const sound = document.getElementById("sound");
+
+let activeVideo = null;
+
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(entry => {
+    const video = entry.target;
+
+    if (entry.isIntersecting) {
+      if (activeVideo && activeVideo !== video) {
+        activeVideo.pause();
+      }
+
+      activeVideo = video;
+      video.play().catch(() => {});
+    } else {
+      video.pause();
+    }
+  });
+}, { threshold: 0.65 });
+
+videos.forEach(video => observer.observe(video));
+
+sound.addEventListener("click", () => {
+  videos.forEach(video => {
+    video.muted = false;
+  });
+
+  if (activeVideo) activeVideo.play().catch(() => {});
+  sound.style.display = "none";
+});
+</script>
+
 </body>
 </html>
