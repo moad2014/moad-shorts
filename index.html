@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -26,7 +25,23 @@ header{position:fixed;top:0;width:100%;height:60px;z-index:1000;display:flex;ali
 .video-card.paused .play-button{display:block}
 .video-info{position:absolute;bottom:85px;right:15px;left:15px;text-shadow:0 1px 4px #000;font-size:15px;pointer-events:none}
 .video-info p{margin-top:8px;overflow-wrap:anywhere}
-.owner-name{font-weight:bold;pointer-events:auto;cursor:pointer;display:inline-block}
+.owner-name{font-weight:bold;pointer-events:auto;cursor:pointer;display:inline-flex;align-items:center}
+.verified-badge{
+ display:inline-flex;
+ align-items:center;
+ justify-content:center;
+ width:19px;
+ height:19px;
+ border-radius:50%;
+ background:#1688ff;
+ color:white;
+ font-size:13px;
+ font-weight:bold;
+ margin-right:6px;
+ vertical-align:middle;
+ flex-shrink:0;
+ text-shadow:none;
+}
 .delete-button{position:absolute;bottom:125px;left:12px;z-index:100;background:#d9233e;color:white;border:0;border-radius:20px;padding:6px 10px;font-size:11px;font-weight:bold}
 .empty{height:100vh;height:100dvh;display:flex;justify-content:center;align-items:center;text-align:center;color:#aaa;font-size:19px;scroll-snap-align:start;padding:20px}
 #modal{display:none;position:fixed;inset:0;z-index:5000;background:#000e;align-items:center;justify-content:center;padding:15px}
@@ -149,7 +164,7 @@ function updateAvatarButton(){
 
 async function getProfile(userId){
  const {data,error}=await db.from("profiles")
-  .select("id,username,avatar_url,username_changed_at")
+  .select("id,username,avatar_url,username_changed_at,is_verified")
   .eq("id",userId).maybeSingle();
  if(error){console.error(error);return null}
  return data;
@@ -210,6 +225,15 @@ function daysUntilUsernameChange(profile){
  return Math.max(0,Math.ceil(remaining/(24*60*60*1000)));
 }
 
+function addVerifiedBadge(element,verified){
+ if(!verified)return;
+ const badge=document.createElement("span");
+ badge.className="verified-badge";
+ badge.textContent="✓";
+ badge.title="حساب موثق من MOAD SHORTS";
+ element.appendChild(badge);
+}
+
 function makeProfileHeader(profile){
  const wrapper=document.createElement("div");
  wrapper.style.textAlign="center";
@@ -228,7 +252,11 @@ function makeProfileHeader(profile){
  }
 
  const name=document.createElement("h2");
+ name.style.display="flex";
+ name.style.alignItems="center";
+ name.style.justifyContent="center";
  name.textContent=profile?.username?"@"+profile.username:"مستخدم MOAD SHORTS";
+ addVerifiedBadge(name,profile?.is_verified);
  wrapper.appendChild(name);
  return wrapper;
 }
@@ -292,7 +320,6 @@ async function showProfile(userId=currentUser?.id){
 
  openModal();
  panelContent.innerHTML="";
-
  panelContent.appendChild(makeProfileHeader(profile));
 
  if(ownProfile){
@@ -447,7 +474,6 @@ function playVideo(video){
  });
 }
 
-// احتساب مشاهدة واحدة للحساب الواحد لكل فيديو
 function setupViewTracking(video,item,countElement){
  if(!item?.id)return;
 
@@ -558,6 +584,7 @@ function createCard(url,description="",category="all",item=null){
 
  if(item?.username){
   owner.textContent="@"+item.username;
+  addVerifiedBadge(owner,item.is_verified);
   owner.onclick=e=>{
    e.stopPropagation();
    showProfile(item.user_id);
@@ -573,12 +600,10 @@ function createCard(url,description="",category="all",item=null){
  const desc=document.createElement("p");
  desc.textContent=description;
 
- // لا نعرض عدد المشاهدات في قائمة لك
  info.append(owner,desc);
  card.append(video,button,info);
  card.classList.add("paused");
 
- // يستمر احتساب المشاهدات في قائمة لك بدون عرض الرقم
  if(item?.id){
   setupViewTracking(video,item,null);
  }
@@ -662,19 +687,24 @@ async function loadVideos(){
 
   if(userIds.length){
    const result=await db.from("profiles")
-    .select("id,username").in("id",userIds);
+    .select("id,username,is_verified").in("id",userIds);
 
    if(!result.error&&result.data){
-    result.data.forEach(p=>profiles[p.id]=p.username);
+    result.data.forEach(p=>profiles[p.id]=p);
    }
   }
 
   data.forEach(item=>{
+   const profile=profiles[item.user_id]||{};
    cards.push(createCard(
     item.video_url,
     item.description||"",
     "all",
-    {...item,username:profiles[item.user_id]||""}
+    {
+     ...item,
+     username:profile.username||"",
+     is_verified:profile.is_verified===true
+    }
    ));
   });
  }
