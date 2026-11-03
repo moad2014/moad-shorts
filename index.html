@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -47,7 +48,6 @@ header{position:fixed;top:0;width:100%;height:60px;z-index:1000;display:flex;ali
 </head>
 
 <body>
-
 <header>
   <div class="tabs">
     <div class="tab active" data-tab="all">لك</div>
@@ -63,7 +63,6 @@ header{position:fixed;top:0;width:100%;height:60px;z-index:1000;display:flex;ali
 
 <input id="fileInput" type="file" accept="video/mp4,video/webm,video/quicktime">
 <input id="avatarInput" type="file" accept="image/*">
-
 <main id="feed"></main>
 
 <div id="modal">
@@ -77,7 +76,6 @@ header{position:fixed;top:0;width:100%;height:60px;z-index:1000;display:flex;ali
 const SUPABASE_URL="https://hjosofbxfykbfwnfqkko.supabase.co";
 const SUPABASE_KEY="sb_publishable_Z2_nCZoKteggdWL_jvo5Ow_05eGKO8P";
 const SITE_URL="https://moad2014.github.io/moad-shorts/";
-
 const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 
 const feed=document.getElementById("feed");
@@ -104,45 +102,21 @@ const oldVideos=[
 "https://cdn.rapidfile.cc/XoIS5tzlFp/video5.mp4"
 ];
 
-/*
-لإضافة فيديوهات الأقسام الخاصة بك:
-ضع روابط فيديوهات الأنمي داخل animeVideos
-والأفلام داخل movieVideos
-والقصص داخل storyVideos
-المستخدمون لا يستطيعون النشر في هذه الأقسام.
-*/
+const animeVideos=[];
+const movieVideos=[];
+const storyVideos=[];
 
-const animeVideos=[
-];
-
-const movieVideos=[
-];
-
-const storyVideos=[
-];
-
-function openModal(){
- modal.style.display="flex";
-}
-
-function closeModal(){
- modal.style.display="none";
-}
-
+function openModal(){modal.style.display="flex"}
+function closeModal(){modal.style.display="none"}
 document.getElementById("closeModal").onclick=closeModal;
-
-modal.addEventListener("click",e=>{
- if(e.target===modal)closeModal();
-});
+modal.addEventListener("click",e=>{if(e.target===modal)closeModal()});
 
 function showMessage(message){
  const status=document.getElementById("status");
  if(status)status.textContent=message;
 }
 
-function defaultAvatar(){
- return "👤";
-}
+function defaultAvatar(){return "👤"}
 
 function updateAvatarButton(){
  if(currentProfile?.avatar_url){
@@ -157,16 +131,10 @@ function updateAvatarButton(){
 }
 
 async function getProfile(userId){
- const {data,error}=await db
-  .from("profiles")
+ const {data,error}=await db.from("profiles")
   .select("id,username,avatar_url,username_changed_at")
-  .eq("id",userId)
-  .maybeSingle();
-
- if(error){
-  console.error(error);
-  return null;
- }
+  .eq("id",userId).maybeSingle();
+ if(error){console.error(error);return null}
  return data;
 }
 
@@ -178,7 +146,6 @@ async function updateUser(user){
 
 function showAuth(){
  openModal();
-
  panelContent.innerHTML=`
  <h2>MOAD SHORTS</h2>
  <input id="email" type="email" placeholder="البريد الإلكتروني">
@@ -186,43 +153,28 @@ function showAuth(){
  <button class="action" id="login">تسجيل الدخول</button>
  <button class="action secondary" id="signup">إنشاء حساب جديد</button>
  <p class="note">قد تحتاج لتأكيد بريدك الإلكتروني قبل تسجيل الدخول.</p>
- <p id="status"></p>
- `;
+ <p id="status"></p>`;
 
  document.getElementById("login").onclick=async()=>{
   const email=document.getElementById("email").value.trim();
   const password=document.getElementById("password").value;
-
   if(!email||!password)return showMessage("اكتب البريد وكلمة المرور");
-
   showMessage("جاري تسجيل الدخول...");
-
   const {error}=await db.auth.signInWithPassword({email,password});
-
   if(error)return showMessage(error.message);
-
   closeModal();
  };
 
  document.getElementById("signup").onclick=async()=>{
   const email=document.getElementById("email").value.trim();
   const password=document.getElementById("password").value;
-
   if(!email||!password)return showMessage("اكتب البريد وكلمة المرور");
   if(password.length<6)return showMessage("كلمة المرور لازم تكون 6 أحرف على الأقل");
-
   showMessage("جاري إنشاء الحساب...");
-
   const {data,error}=await db.auth.signUp({
-   email,
-   password,
-   options:{
-    emailRedirectTo:SITE_URL
-   }
+   email,password,options:{emailRedirectTo:SITE_URL}
   });
-
   if(error)return showMessage(error.message);
-
   if(data.session){
    await updateUser(data.session.user);
    showMessage("تم إنشاء الحساب بنجاح!");
@@ -235,215 +187,124 @@ function showAuth(){
 
 function daysUntilUsernameChange(){
  if(!currentProfile?.username||!currentProfile.username_changed_at)return 0;
-
  const changed=new Date(currentProfile.username_changed_at).getTime();
  const sevenDays=7*24*60*60*1000;
  const remaining=sevenDays-(Date.now()-changed);
-
  return Math.max(0,Math.ceil(remaining/(24*60*60*1000)));
 }
 
 async function showProfile(){
- if(!currentUser){
-  showAuth();
-  return;
- }
-
+ if(!currentUser){showAuth();return}
  currentProfile=await getProfile(currentUser.id);
  updateAvatarButton();
-
  openModal();
 
  const avatar=currentProfile?.avatar_url||"";
-
  panelContent.innerHTML=`
  <h2>ملفي الشخصي</h2>
-
- <img class="profile-avatar" id="profileAvatar"
- src="${avatar||""}" style="${avatar?"":"display:none"}">
-
- <div style="text-align:center;font-size:45px" id="defaultProfileAvatar">
- ${avatar?"":"👤"}
- </div>
-
- <p style="text-align:center;margin:10px 0;overflow-wrap:anywhere">
- ${currentUser.email}
- </p>
+ <img class="profile-avatar" id="profileAvatar" src="${avatar||""}" style="${avatar?"":"display:none"}">
+ <div style="text-align:center;font-size:45px" id="defaultProfileAvatar">${avatar?"":"👤"}</div>
 
  <button class="action secondary" id="changeAvatar">تغيير صورة الحساب</button>
  <input id="newUsername" maxlength="24" placeholder="اسم المستخدم">
-
  <button class="action" id="saveProfile">حفظ الملف الشخصي</button>
-
  <p class="note" id="usernameNote"></p>
-
  <h3 style="margin-top:18px">فيديوهاتي</h3>
  <div class="profile-videos" id="myVideos"></div>
-
  <button class="action secondary" id="logout">تسجيل الخروج</button>
- <p id="status"></p>
- `;
+ <p id="status"></p>`;
 
  document.getElementById("newUsername").value=currentProfile?.username||"";
-
  const days=daysUntilUsernameChange();
-
  document.getElementById("usernameNote").textContent=
- days>0
- ?`يمكنك تغيير اسم المستخدم بعد ${days} يوم.`
- :"يمكنك اختيار اسم مستخدم الآن. تغيير الاسم بعد ذلك مرة كل 7 أيام.";
+ days>0?`يمكنك تغيير اسم المستخدم بعد ${days} يوم.`:
+ "يمكنك اختيار اسم مستخدم الآن. تغيير الاسم بعد ذلك مرة كل 7 أيام.";
 
- document.getElementById("changeAvatar").onclick=()=>{
-  avatarInput.click();
- };
-
+ document.getElementById("changeAvatar").onclick=()=>avatarInput.click();
  document.getElementById("saveProfile").onclick=saveProfile;
-
  document.getElementById("logout").onclick=async()=>{
   await db.auth.signOut();
   await updateUser(null);
   closeModal();
   await loadVideos();
  };
-
  await loadMyVideos();
 }
 
 async function saveProfile(){
  const username=document.getElementById("newUsername").value.trim();
-
- if(username.length<3||username.length>24){
+ if(username.length<3||username.length>24)
   return showMessage("اسم المستخدم لازم يكون من 3 إلى 24 حرفاً");
- }
 
  const button=document.getElementById("saveProfile");
  button.disabled=true;
  showMessage("جاري حفظ الاسم...");
 
- const {data,error}=await db
-  .from("profiles")
-  .upsert({
-   id:currentUser.id,
-   username:username
-  },{onConflict:"id"})
-  .select()
-  .single();
+ const {data,error}=await db.from("profiles")
+  .upsert({id:currentUser.id,username},{onConflict:"id"})
+  .select().single();
 
  button.disabled=false;
 
  if(error){
-  if(error.code==="23505"){
+  if(error.code==="23505")
    return showMessage("اسم المستخدم مستخدم من شخص آخر. اختار اسماً مختلفاً.");
-  }
-
   if(error.message.toLowerCase().includes("7 days")||
-     error.message.toLowerCase().includes("seven")){
+     error.message.toLowerCase().includes("seven"))
    return showMessage("لا يمكنك تغيير اسم المستخدم إلا مرة كل 7 أيام.");
-  }
-
   return showMessage("حدث خطأ: "+error.message);
  }
 
  currentProfile=await getProfile(currentUser.id);
  updateAvatarButton();
-
  showMessage("تم حفظ الملف الشخصي بنجاح!");
 }
 
 avatarInput.onchange=async()=>{
  const file=avatarInput.files[0];
  if(!file)return;
-
  if(!file.type.startsWith("image/")){
-  showMessage("اختار صورة فقط");
-  avatarInput.value="";
-  return;
+  showMessage("اختار صورة فقط");avatarInput.value="";return;
  }
-
  if(file.size>3*1024*1024){
-  showMessage("حجم الصورة أكبر من 3 MB");
-  avatarInput.value="";
-  return;
+  showMessage("حجم الصورة أكبر من 3 MB");avatarInput.value="";return;
  }
-
  showMessage("جاري رفع صورة الحساب...");
-
  const ext=(file.name.split(".").pop()||"jpg").toLowerCase();
  const path=currentUser.id+"/"+crypto.randomUUID()+"."+ext;
-
- const {error:uploadError}=await db.storage
-  .from("avatars")
-  .upload(path,file,{
-   contentType:file.type,
-   upsert:false
-  });
-
- if(uploadError){
-  showMessage("تعذر رفع الصورة: "+uploadError.message);
-  avatarInput.value="";
-  return;
- }
-
- const {data:urlData}=db.storage
-  .from("avatars")
-  .getPublicUrl(path);
-
- const {error:updateError}=await db
-  .from("profiles")
-  .update({avatar_url:urlData.publicUrl})
-  .eq("id",currentUser.id);
-
- if(updateError){
-  showMessage("تم رفع الصورة لكن تعذر حفظها: "+updateError.message);
-  return;
- }
-
+ const {error:uploadError}=await db.storage.from("avatars")
+  .upload(path,file,{contentType:file.type,upsert:false});
+ if(uploadError){showMessage("تعذر رفع الصورة: "+uploadError.message);avatarInput.value="";return}
+ const {data:urlData}=db.storage.from("avatars").getPublicUrl(path);
+ const {error:updateError}=await db.from("profiles")
+  .update({avatar_url:urlData.publicUrl}).eq("id",currentUser.id);
+ if(updateError){showMessage("تم رفع الصورة لكن تعذر حفظها: "+updateError.message);return}
  currentProfile=await getProfile(currentUser.id);
  updateAvatarButton();
-
  showMessage("تم تغيير صورة الحساب بنجاح!");
-
  const img=document.getElementById("profileAvatar");
  const placeholder=document.getElementById("defaultProfileAvatar");
-
- if(img){
-  img.src=urlData.publicUrl;
-  img.style.display="block";
- }
+ if(img){img.src=urlData.publicUrl;img.style.display="block"}
  if(placeholder)placeholder.style.display="none";
-
  avatarInput.value="";
 };
 
 async function loadMyVideos(){
  const container=document.getElementById("myVideos");
  if(!container)return;
-
  container.innerHTML="<p>جاري تحميل فيديوهاتك...</p>";
-
- const {data,error}=await db
-  .from("videos")
+ const {data,error}=await db.from("videos")
   .select("id,video_url,description")
   .eq("user_id",currentUser.id)
   .order("created_at",{ascending:false});
-
- if(error){
-  container.innerHTML="<p>تعذر تحميل الفيديوهات</p>";
-  return;
- }
-
+ if(error){container.innerHTML="<p>تعذر تحميل الفيديوهات</p>";return}
  container.innerHTML="";
-
  if(!data||data.length===0){
-  container.innerHTML="<p>لم تنشر أي فيديو حتى الآن</p>";
-  return;
+  container.innerHTML="<p>لم تنشر أي فيديو حتى الآن</p>";return;
  }
-
  data.forEach(item=>{
   const video=document.createElement("video");
-  video.src=item.video_url;
-  video.controls=true;
-  video.playsInline=true;
+  video.src=item.video_url;video.controls=true;video.playsInline=true;
   container.appendChild(video);
  });
 }
@@ -465,8 +326,7 @@ function shuffle(items){
 function stopAllVideos(except=null){
  document.querySelectorAll(".video-card video").forEach(video=>{
   if(video!==except){
-   video.pause();
-   video.muted=true;
+   video.pause();video.muted=true;
    video.closest(".video-card").classList.add("paused");
   }
  });
@@ -475,192 +335,106 @@ function stopAllVideos(except=null){
 function playVideo(video){
  stopAllVideos(video);
  video.muted=!soundEnabled;
-
  video.play().then(()=>{
   video.closest(".video-card").classList.remove("paused");
   activeVideo=video;
- }).catch(()=>{
-  video.closest(".video-card").classList.add("paused");
- });
+ }).catch(()=>{video.closest(".video-card").classList.add("paused")});
 }
 
 function createCard(url,description="",category="all",item=null){
  const card=document.createElement("section");
- card.className="video-card";
- card.dataset.category=category;
-
+ card.className="video-card";card.dataset.category=category;
  const video=document.createElement("video");
  video.playsInline=true;
  video.setAttribute("webkit-playsinline","");
  video.preload="metadata";
-
  const source=document.createElement("source");
- source.src=url;
- source.type="video/mp4";
- video.appendChild(source);
-
+ source.src=url;source.type="video/mp4";video.appendChild(source);
  const button=document.createElement("button");
- button.className="play-button";
- button.textContent="▶";
-
- const info=document.createElement("div");
- info.className="video-info";
-
+ button.className="play-button";button.textContent="▶";
+ const info=document.createElement("div");info.className="video-info";
  const owner=document.createElement("div");
  owner.className="owner-name";
  owner.textContent=item?.username?"@"+item.username:"";
-
- const desc=document.createElement("p");
- desc.textContent=description;
-
- info.append(owner,desc);
- card.append(video,button,info);
+ const desc=document.createElement("p");desc.textContent=description;
+ info.append(owner,desc);card.append(video,button,info);
  card.classList.add("paused");
 
  if(item?.id&&currentUser&&item.user_id===currentUser.id){
   const del=document.createElement("button");
-  del.className="delete-button";
-  del.textContent="حذف الفيديو";
-
+  del.className="delete-button";del.textContent="حذف الفيديو";
   del.onclick=async(e)=>{
    e.stopPropagation();
-
    if(!confirm("هل أنت متأكد من حذف هذا الفيديو؟"))return;
-
-   del.disabled=true;
-   del.textContent="جاري الحذف...";
-
-   const {error}=await db
-    .from("videos")
-    .delete()
-    .eq("id",item.id)
-    .eq("user_id",currentUser.id);
-
+   del.disabled=true;del.textContent="جاري الحذف...";
+   const {error}=await db.from("videos").delete()
+    .eq("id",item.id).eq("user_id",currentUser.id);
    if(error){
     alert("تعذر حذف الفيديو: "+error.message);
-    del.disabled=false;
-    del.textContent="حذف الفيديو";
-    return;
+    del.disabled=false;del.textContent="حذف الفيديو";return;
    }
-
    const path=getVideoStoragePath(url);
-
-   if(path){
-    await db.storage.from("videos").remove([path]);
-   }
-
+   if(path)await db.storage.from("videos").remove([path]);
    await loadVideos();
   };
-
   card.appendChild(del);
  }
 
  card.addEventListener("click",event=>{
   if(event.target===button||event.target===video){
    if(video.paused)playVideo(video);
-   else{
-    video.pause();
-    card.classList.add("paused");
-   }
+   else{video.pause();card.classList.add("paused")}
   }
  });
-
- video.addEventListener("ended",()=>{
-  card.classList.add("paused");
- });
-
- video.addEventListener("error",()=>{
-  card.classList.add("paused");
- });
-
+ video.addEventListener("ended",()=>card.classList.add("paused"));
+ video.addEventListener("error",()=>card.classList.add("paused"));
  return card;
 }
 
 function getVideoStoragePath(url){
  const marker="/storage/v1/object/public/videos/";
-
  try{
   const index=url.indexOf(marker);
   if(index===-1)return null;
   return decodeURIComponent(url.substring(index+marker.length));
- }catch(e){
-  return null;
- }
-}
-
-function addCuratedVideos(list,category,cards){
- list.forEach(item=>{
-  cards.push(createCard(item.url,item.description||"",category));
- });
+ }catch(e){return null}
 }
 
 async function loadVideos(){
- stopAllVideos();
- activeVideo=null;
- feed.innerHTML="";
-
+ stopAllVideos();activeVideo=null;feed.innerHTML="";
  let cards=[];
+ oldVideos.forEach(url=>cards.push(createCard(url,"","all")));
 
- oldVideos.forEach(url=>{
-  cards.push(createCard(url,"","all"));
- });
-
- const {data,error}=await db
-  .from("videos")
+ const {data,error}=await db.from("videos")
   .select("id,user_id,video_url,description,created_at")
   .order("created_at",{ascending:false});
 
- if(error){
-  console.error(error);
- }else if(data){
+ if(error)console.error(error);
+ else if(data){
   const userIds=[...new Set(data.map(v=>v.user_id).filter(Boolean))];
-
   let profiles={};
-
   if(userIds.length){
-   const result=await db
-    .from("profiles")
-    .select("id,username")
-    .in("id",userIds);
-
-   if(!result.error&&result.data){
-    result.data.forEach(p=>{
-     profiles[p.id]=p.username;
-    });
-   }
+   const result=await db.from("profiles")
+    .select("id,username").in("id",userIds);
+   if(!result.error&&result.data)
+    result.data.forEach(p=>profiles[p.id]=p.username);
   }
-
   data.forEach(item=>{
-   cards.push(createCard(
-    item.video_url,
-    item.description||"",
-    "all",
-    {
-     ...item,
-     username:profiles[item.user_id]||""
-    }
-   ));
+   cards.push(createCard(item.video_url,item.description||"","all",{
+    ...item,username:profiles[item.user_id]||""
+   }));
   });
  }
-
  shuffle(cards);
  cards.forEach(card=>feed.appendChild(card));
-
- addCuratedVideos(animeVideos,"anime",[]);
- addCuratedVideos(movieVideos,"movies",[]);
- addCuratedVideos(storyVideos,"stories",[]);
-
  animeVideos.forEach(v=>feed.appendChild(createCard(v.url,v.description||"","anime")));
  movieVideos.forEach(v=>feed.appendChild(createCard(v.url,v.description||"","movies")));
  storyVideos.forEach(v=>feed.appendChild(createCard(v.url,v.description||"","stories")));
 
  if(observer)observer.disconnect();
-
  observer=new IntersectionObserver(entries=>{
-  const visible=entries
-   .filter(entry=>entry.isIntersecting)
+  const visible=entries.filter(entry=>entry.isIntersecting)
    .sort((a,b)=>b.intersectionRatio-a.intersectionRatio)[0];
-
   if(visible&&visible.intersectionRatio>=0.7){
    const video=visible.target.querySelector("video");
    if(activeVideo!==video||video.paused)playVideo(video);
@@ -668,47 +442,35 @@ async function loadVideos(){
  },{threshold:[0,0.7,1]});
 
  document.querySelectorAll(".video-card").forEach(card=>observer.observe(card));
-
  applyTab(currentTab);
 }
 
 function applyTab(category){
- currentTab=category;
- stopAllVideos();
- activeVideo=null;
- feed.scrollTop=0;
-
+ currentTab=category;stopAllVideos();activeVideo=null;feed.scrollTop=0;
  document.querySelectorAll(".empty").forEach(item=>item.remove());
-
  let visibleCount=0;
-
  document.querySelectorAll(".video-card").forEach(card=>{
   const show=card.dataset.category===category;
   card.style.display=show?"flex":"none";
   if(show)visibleCount++;
  });
-
  if(visibleCount===0){
   const empty=document.createElement("div");
   empty.className="empty";
-
   const messages={
    all:"لا توجد فيديوهات حالياً",
    anime:"لا توجد فيديوهات أنمي حالياً",
    movies:"لا توجد فيديوهات أفلام حالياً",
    stories:"لا توجد قصص حالياً"
   };
-
-  empty.textContent=messages[category];
-  feed.appendChild(empty);
+  empty.textContent=messages[category];feed.appendChild(empty);
  }
 }
 
 document.querySelectorAll(".tab").forEach(tab=>{
  tab.onclick=()=>{
   document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
-  tab.classList.add("active");
-  applyTab(tab.dataset.tab);
+  tab.classList.add("active");applyTab(tab.dataset.tab);
  };
 });
 
@@ -719,148 +481,77 @@ soundButton.onclick=()=>{
 };
 
 uploadButton.onclick=()=>{
- if(currentTab!=="all"){
-  alert("النشر متاح في قسم لك فقط");
-  return;
- }
-
- if(!currentUser){
-  showAuth();
-  return;
- }
-
+ if(currentTab!=="all"){alert("النشر متاح في قسم لك فقط");return}
+ if(!currentUser){showAuth();return}
  fileInput.click();
 };
 
 function validateVideo(file){
  return new Promise((resolve,reject)=>{
-  if(!file.type.startsWith("video/")){
-   reject("الملف المختار مش فيديو");
-   return;
-  }
-
-  if(file.size>50*1024*1024){
-   reject("حجم الفيديو أكبر من 50 MB");
-   return;
-  }
-
+  if(!file.type.startsWith("video/")){reject("الملف المختار مش فيديو");return}
+  if(file.size>50*1024*1024){reject("حجم الفيديو أكبر من 50 MB");return}
   const video=document.createElement("video");
-  video.preload="metadata";
-  video.muted=true;
-
+  video.preload="metadata";video.muted=true;
   video.onloadedmetadata=()=>{
    URL.revokeObjectURL(video.src);
-
-   if(!Number.isFinite(video.duration)||video.duration<=0){
-    reject("تعذر قراءة مدة الفيديو");
-   }else if(video.duration>90){
-    reject("مدة الفيديو أطول من 90 ثانية");
-   }else if(video.videoHeight<=video.videoWidth){
-    reject("لازم الفيديو يكون عمودي");
-   }else{
-    resolve(true);
-   }
+   if(!Number.isFinite(video.duration)||video.duration<=0)reject("تعذر قراءة مدة الفيديو");
+   else if(video.duration>90)reject("مدة الفيديو أطول من 90 ثانية");
+   else if(video.videoHeight<=video.videoWidth)reject("لازم الفيديو يكون عمودي");
+   else resolve(true);
   };
-
-  video.onerror=()=>{
-   URL.revokeObjectURL(video.src);
-   reject("تعذر قراءة الفيديو");
-  };
-
+  video.onerror=()=>{URL.revokeObjectURL(video.src);reject("تعذر قراءة الفيديو")};
   video.src=URL.createObjectURL(file);
  });
 }
 
 fileInput.onchange=async()=>{
- const file=fileInput.files[0];
- if(!file)return;
-
- if(!currentUser){
-  fileInput.value="";
-  showAuth();
-  return;
- }
-
+ const file=fileInput.files[0];if(!file)return;
+ if(!currentUser){fileInput.value="";showAuth();return}
  openModal();
-
  panelContent.innerHTML=`
  <h2>نشر فيديو</h2>
  <textarea id="description" placeholder="اكتب وصف الفيديو (اختياري)"></textarea>
- <p id="status">جاري فحص الفيديو...</p>
- `;
-
- try{
-  await validateVideo(file);
- }catch(error){
-  showMessage(error);
-  fileInput.value="";
-  return;
- }
+ <p id="status">جاري فحص الفيديو...</p>`;
+ try{await validateVideo(file)}
+ catch(error){showMessage(error);fileInput.value="";return}
 
  panelContent.innerHTML=`
  <h2>نشر فيديو</h2>
  <textarea id="description" placeholder="اكتب وصف الفيديو (اختياري)"></textarea>
  <button class="action" id="publish">نشر الآن</button>
  <p class="note">الفيديو عمودي، مدته لا تتجاوز 90 ثانية وحجمه لا يتجاوز 50 MB.</p>
- <p id="status"></p>
- `;
+ <p id="status"></p>`;
 
  document.getElementById("publish").onclick=async()=>{
   const button=document.getElementById("publish");
   const description=document.getElementById("description").value.trim();
-
-  button.disabled=true;
-  showMessage("جاري رفع الفيديو... لا تغلق الصفحة");
-
+  button.disabled=true;showMessage("جاري رفع الفيديو... لا تغلق الصفحة");
   try{
    const {data:sessionData}=await db.auth.getSession();
    const user=sessionData.session?.user;
-
    if(!user)throw new Error("سجل دخولك من جديد");
-
    const ext=(file.name.split(".").pop()||"mp4").toLowerCase();
    const path=user.id+"/"+crypto.randomUUID()+"."+ext;
-
-   const {error:uploadError}=await db.storage
-    .from("videos")
-    .upload(path,file,{
-     contentType:file.type,
-     upsert:false
-    });
-
+   const {error:uploadError}=await db.storage.from("videos")
+    .upload(path,file,{contentType:file.type,upsert:false});
    if(uploadError)throw uploadError;
-
-   const {data:urlData}=db.storage
-    .from("videos")
-    .getPublicUrl(path);
-
-   const {error:insertError}=await db
-    .from("videos")
-    .insert({
-     user_id:user.id,
-     video_url:urlData.publicUrl,
-     description:description
-    });
-
+   const {data:urlData}=db.storage.from("videos").getPublicUrl(path);
+   const {error:insertError}=await db.from("videos").insert({
+    user_id:user.id,video_url:urlData.publicUrl,description
+   });
    if(insertError){
     await db.storage.from("videos").remove([path]);
     throw insertError;
    }
-
    showMessage("تم نشر الفيديو بنجاح! 🎉");
    fileInput.value="";
-
    setTimeout(async()=>{
-    closeModal();
-    currentTab="all";
-
+    closeModal();currentTab="all";
     document.querySelectorAll(".tab").forEach(t=>{
      t.classList.toggle("active",t.dataset.tab==="all");
     });
-
     await loadVideos();
    },1000);
-
   }catch(error){
    showMessage("حدث خطأ: "+error.message);
    button.disabled=false;
@@ -873,8 +564,7 @@ async function initialize(){
  await updateUser(data.session?.user||null);
  await loadVideos();
 }
-
 initialize();
 </script>
 </body>
-</html> 
+</html>
