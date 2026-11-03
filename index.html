@@ -3,129 +3,123 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MOAD SHORTS</title>
 
 <style>
 * {
+  box-sizing: border-box;
   margin: 0;
   padding: 0;
-  box-sizing: border-box;
 }
 
-html, body {
-  width: 100%;
-  height: 100%;
+body {
   background: #000;
   color: white;
-  overflow: hidden;
   font-family: Arial, sans-serif;
+  overflow: hidden;
 }
 
 header {
   position: fixed;
   top: 0;
-  left: 0;
-  right: 0;
-  height: 58px;
+  width: 100%;
+  height: 60px;
   z-index: 1000;
   display: flex;
-  justify-content: center;
   align-items: center;
-  gap: 35px;
-  background: #080808;
+  justify-content: center;
+  background: linear-gradient(#000b, transparent);
+}
+
+.tabs {
+  display: flex;
+  gap: 28px;
+  font-size: 17px;
+  font-weight: bold;
 }
 
 .tab {
-  color: #999;
-  font-size: 17px;
-  font-weight: bold;
-  height: 58px;
-  display: flex;
-  align-items: center;
-  position: relative;
+  opacity: .65;
   cursor: pointer;
+  padding-bottom: 8px;
 }
 
 .tab.active {
-  color: white;
-}
-
-.tab.active::after {
-  content: "";
-  position: absolute;
-  bottom: 7px;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: white;
-  border-radius: 10px;
-}
-
-.section {
-  display: none;
-  width: 100%;
-  height: 100%;
-}
-
-.section.active {
-  display: block;
-}
-
-.feed {
-  width: 100%;
-  height: 100%;
-  overflow-y: auto;
-  overflow-x: hidden;
-  scroll-snap-type: y mandatory;
-  scrollbar-width: none;
-  -webkit-overflow-scrolling: touch;
-}
-
-.feed::-webkit-scrollbar {
-  display: none;
-}
-
-.video-box {
-  width: 100%;
-  height: 100vh;
-  height: 100dvh;
-  background: black;
-  scroll-snap-align: start;
-  scroll-snap-stop: always;
-}
-
-video {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  display: block;
-}
-
-.empty {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #888;
-  font-size: 18px;
+  opacity: 1;
+  border-bottom: 3px solid white;
 }
 
 #soundButton {
   position: fixed;
   top: 75px;
   left: 15px;
-  z-index: 9999;
-  display: block;
-  padding: 13px 18px;
-  border: 2px solid white;
-  border-radius: 30px;
-  background: #222;
+  z-index: 2000;
+  background: #222b;
   color: white;
-  font-size: 15px;
-  font-weight: bold;
-  cursor: pointer;
+  border: 1px solid #777;
+  border-radius: 25px;
+  padding: 10px 15px;
+  font-size: 14px;
+}
+
+#feed {
+  height: 100dvh;
+  overflow-y: scroll;
+  scroll-snap-type: y mandatory;
+  scrollbar-width: none;
+}
+
+#feed::-webkit-scrollbar {
+  display: none;
+}
+
+.video-card {
+  width: 100%;
+  height: 100dvh;
+  position: relative;
+  scroll-snap-align: start;
+  background: #000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: black;
+}
+
+.play-button {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border: none;
+  background: #0008;
+  color: white;
+  font-size: 45px;
+  width: 75px;
+  height: 75px;
+  border-radius: 50%;
+  display: none;
+}
+
+.video-card.paused .play-button {
+  display: block;
+}
+
+.empty {
+  height: 100dvh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  color: #aaa;
+  font-size: 20px;
+  scroll-snap-align: start;
 }
 </style>
 </head>
@@ -133,126 +127,154 @@ video {
 <body>
 
 <header>
-  <div class="tab active" onclick="changeTab('forYou', this)">لك</div>
-  <div class="tab" onclick="changeTab('anime', this)">أنمي</div>
-  <div class="tab" onclick="changeTab('movies', this)">أفلام</div>
+  <div class="tabs">
+    <div class="tab active" data-tab="all">لك</div>
+    <div class="tab" data-tab="anime">أنمي</div>
+    <div class="tab" data-tab="movies">أفلام</div>
+  </div>
 </header>
 
-<button id="soundButton" onclick="toggleSound()">
-  🔊 تشغيل الصوت
-</button>
+<button id="soundButton">🔇 الصوت مغلق</button>
 
-<div id="forYou" class="section active">
-  <div class="feed">
+<main id="feed">
 
-    <div class="video-box">
-      <video playsinline muted loop controls preload="metadata">
-        <source src="./2026-10-21-131624724.mp4" type="video/mp4">
-      </video>
-    </div>
+  <section class="video-card" data-category="all">
+    <video playsinline preload="metadata">
+      <source src="https://raw.githubusercontent.com/moad2014/moad-shorts/main/2026-10-21-131624724.mp4" type="video/mp4">
+    </video>
+    <button class="play-button">▶</button>
+  </section>
 
-    <div class="video-box">
-      <video playsinline muted loop controls preload="metadata">
-        <source src="./video2.mp4" type="video/mp4">
-      </video>
-    </div>
+  <section class="video-card" data-category="all">
+    <video playsinline preload="metadata">
+      <source src="https://raw.githubusercontent.com/moad2014/moad-shorts/main/video2.mp4" type="video/mp4">
+    </video>
+    <button class="play-button">▶</button>
+  </section>
 
-  </div>
-</div>
+  <section class="video-card" data-category="all">
+    <video playsinline preload="metadata">
+      <source src="https://raw.githubusercontent.com/moad2014/moad-shorts/main/video4.mp4" type="video/mp4">
+    </video>
+    <button class="play-button">▶</button>
+  </section>
 
-<div id="anime" class="section">
-  <div class="empty">لا توجد فيديوهات أنمي حالياً</div>
-</div>
+  <section class="video-card" data-category="all">
+    <video playsinline preload="metadata">
+      <source src="https://drive.google.com/uc?export=download&id=1VdLElwbmVPStvL7E8h9Uxeq6CXdNSIoT" type="video/mp4">
+    </video>
+    <button class="play-button">▶</button>
+  </section>
 
-<div id="movies" class="section">
-  <div class="empty">لا توجد فيديوهات أفلام حالياً</div>
-</div>
+</main>
 
 <script>
-const allVideos = [...document.querySelectorAll("video")];
+const feed = document.getElementById("feed");
+const soundButton = document.getElementById("soundButton");
+const tabs = document.querySelectorAll(".tab");
+
 let soundEnabled = false;
+let activeVideo = null;
 
-function stopAllVideos() {
-  allVideos.forEach(video => video.pause());
-}
-
-function getCurrentVideo() {
-  const section = document.querySelector(".section.active");
-  const feed = section.querySelector(".feed");
-
-  if (!feed) return null;
-
-  const index = Math.round(feed.scrollTop / feed.clientHeight);
-  return feed.querySelectorAll("video")[index] || null;
-}
-
-function toggleSound() {
-  soundEnabled = !soundEnabled;
-
-  const button = document.getElementById("soundButton");
-
-  button.textContent = soundEnabled
-    ? "🔇 كتم الصوت"
-    : "🔊 تشغيل الصوت";
-
-  const video = getCurrentVideo();
-
-  if (video) {
-    video.muted = !soundEnabled;
-    video.play().catch(() => {});
-  }
-}
-
-function changeTab(id, tab) {
-  stopAllVideos();
-
-  document.querySelectorAll(".section").forEach(section => {
-    section.classList.remove("active");
-  });
-
-  document.querySelectorAll(".tab").forEach(item => {
-    item.classList.remove("active");
-  });
-
-  document.getElementById(id).classList.add("active");
-  tab.classList.add("active");
-
-  const section = document.getElementById(id);
-  const feed = section.querySelector(".feed");
-
-  if (feed) {
-    const video = feed.querySelector("video");
-
-    if (video) {
-      video.muted = !soundEnabled;
-      video.play().catch(() => {});
+function stopAllVideos(except = null) {
+  document.querySelectorAll("video").forEach(video => {
+    if (video !== except) {
+      video.pause();
+      video.muted = true;
+      video.closest(".video-card").classList.add("paused");
     }
-  }
+  });
 }
 
-document.querySelectorAll(".feed").forEach(feed => {
-  const observer = new IntersectionObserver(entries => {
-    entries.forEach(entry => {
-      const video = entry.target;
+function playVideo(video) {
+  stopAllVideos(video);
+  video.muted = !soundEnabled;
 
-      if (
-        entry.isIntersecting &&
-        feed.closest(".section").classList.contains("active")
-      ) {
-        stopAllVideos();
-        video.muted = !soundEnabled;
-        video.play().catch(() => {});
+  video.play().then(() => {
+    video.closest(".video-card").classList.remove("paused");
+    activeVideo = video;
+  }).catch(() => {
+    video.closest(".video-card").classList.add("paused");
+  });
+}
+
+document.querySelectorAll(".video-card").forEach(card => {
+  const video = card.querySelector("video");
+  const button = card.querySelector(".play-button");
+
+  card.addEventListener("click", event => {
+    if (event.target === button || event.target === video) {
+      if (video.paused) {
+        playVideo(video);
       } else {
         video.pause();
+        card.classList.add("paused");
       }
-    });
-  }, {
-    root: feed,
-    threshold: 0.7
+    }
   });
 
-  feed.querySelectorAll("video").forEach(video => {
-    observer.observe(video);
+  video.addEventListener("ended", () => {
+    card.classList.add("paused");
+  });
+});
+
+soundButton.addEventListener("click", () => {
+  soundEnabled = !soundEnabled;
+
+  if (activeVideo) {
+    activeVideo.muted = !soundEnabled;
+  }
+
+  soundButton.textContent = soundEnabled
+    ? "🔊 الصوت مفتوح"
+    : "🔇 الصوت مغلق";
+});
+
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(entry => {
+    const video = entry.target.querySelector("video");
+
+    if (entry.isIntersecting && entry.intersectionRatio >= 0.7) {
+      playVideo(video);
+    } else {
+      video.pause();
+      video.closest(".video-card").classList.add("paused");
+    }
+  });
+}, {
+  threshold: [0.7]
+});
+
+document.querySelectorAll(".video-card").forEach(card => {
+  observer.observe(card);
+});
+
+tabs.forEach(tab => {
+  tab.addEventListener("click", () => {
+    tabs.forEach(item => item.classList.remove("active"));
+    tab.classList.add("active");
+
+    stopAllVideos();
+    feed.scrollTop = 0;
+
+    const category = tab.dataset.tab;
+
+    document.querySelectorAll(".video-card, .empty").forEach(item => {
+      item.style.display = category === "all" ? "flex" : "none";
+    });
+
+    if (category !== "all") {
+      let message = category === "anime"
+        ? "لا توجد فيديوهات أنمي حالياً"
+        : "لا توجد فيديوهات أفلام حالياً";
+
+      let empty = document.createElement("div");
+      empty.className = "empty";
+      empty.textContent = message;
+      feed.appendChild(empty);
+    } else {
+      document.querySelectorAll(".empty").forEach(item => item.remove());
+    }
   });
 });
 </script>
