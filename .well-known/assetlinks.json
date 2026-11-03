@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "io.github.moad2014.twa",
+        "sha256_cert_fingerprints": ["64:08:29:61:0A:B3:E7:1A:7C:73:67:FD:62:26:B2:48:F3:07:53:B8:34:54:E4:0E:09:F2:14:AE:76:76:09:A0"]
+      }
+    }]
