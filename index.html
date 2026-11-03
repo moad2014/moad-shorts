@@ -23,26 +23,28 @@ header{position:fixed;top:0;width:100%;height:60px;z-index:1000;display:flex;ali
 .video-card video{width:100%;height:100%;object-fit:contain;background:black}
 .play-button{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);border:0;background:#0008;color:white;font-size:45px;width:75px;height:75px;border-radius:50%;display:none}
 .video-card.paused .play-button{display:block}
-.video-info{position:absolute;bottom:85px;right:15px;left:15px;text-shadow:0 1px 4px #000;font-size:15px;pointer-events:none}
+.video-info{position:absolute;bottom:85px;right:15px;left:85px;text-shadow:0 1px 4px #000;font-size:15px;pointer-events:none}
 .video-info p{margin-top:8px;overflow-wrap:anywhere}
 .owner-name{font-weight:bold;pointer-events:auto;cursor:pointer;display:inline-flex;align-items:center}
-.verified-badge{
- display:inline-flex;
- align-items:center;
- justify-content:center;
- width:19px;
- height:19px;
- border-radius:50%;
- background:#1688ff;
- color:white;
- font-size:13px;
- font-weight:bold;
- margin-right:6px;
- vertical-align:middle;
- flex-shrink:0;
- text-shadow:none;
-}
+.verified-badge{display:inline-flex;align-items:center;justify-content:center;width:19px;height:19px;border-radius:50%;background:#1688ff;color:white;font-size:13px;font-weight:bold;margin-right:6px;vertical-align:middle;flex-shrink:0;text-shadow:none}
 .delete-button{position:absolute;bottom:125px;left:12px;z-index:100;background:#d9233e;color:white;border:0;border-radius:20px;padding:6px 10px;font-size:11px;font-weight:bold}
+
+/* أزرار الإعجاب والتعليقات */
+.social-actions{
+ position:absolute;left:12px;bottom:170px;z-index:150;
+ display:flex;flex-direction:column;gap:20px;align-items:center
+}
+.social-btn{
+ border:0;background:transparent;color:white;
+ display:flex;flex-direction:column;align-items:center;
+ gap:5px;font-size:25px;cursor:pointer;
+ text-shadow:0 1px 5px #000;
+ min-width:48px
+}
+.social-btn span{font-size:13px;font-weight:bold}
+.social-btn.liked{color:#fe2c55}
+.social-btn:disabled{opacity:.6}
+
 .empty{height:100vh;height:100dvh;display:flex;justify-content:center;align-items:center;text-align:center;color:#aaa;font-size:19px;scroll-snap-align:start;padding:20px}
 #modal{display:none;position:fixed;inset:0;z-index:5000;background:#000e;align-items:center;justify-content:center;padding:15px}
 .panel{background:#191919;border:1px solid #444;border-radius:18px;padding:20px;width:100%;max-width:420px;max-height:90dvh;overflow:auto}
@@ -65,6 +67,19 @@ header{position:fixed;top:0;width:100%;height:60px;z-index:1000;display:flex;ali
 #closeViewer{position:absolute;top:18px;right:18px;background:#333;color:white;border:0;border-radius:50%;width:42px;height:42px;font-size:27px;z-index:2}
 #viewerViews{font-size:15px;margin-top:12px;color:white}
 #viewerDescription{font-size:14px;color:#ccc;margin-top:8px;text-align:center;max-width:90%;overflow-wrap:anywhere}
+
+/* نافذة التعليقات */
+.comments-list{display:flex;flex-direction:column;gap:15px;margin:15px 0;max-height:45dvh;overflow-y:auto}
+.comment-item{display:flex;gap:10px;align-items:flex-start}
+.comment-avatar{width:38px;height:38px;flex-shrink:0;border-radius:50%;object-fit:cover;background:#333}
+.comment-avatar-fallback{width:38px;height:38px;flex-shrink:0;border-radius:50%;background:#333;display:flex;align-items:center;justify-content:center}
+.comment-content{flex:1;min-width:0}
+.comment-username{font-size:12px;color:#aaa;margin-bottom:5px;font-weight:bold}
+.comment-text{font-size:14px;color:white;overflow-wrap:anywhere;line-height:1.5}
+.delete-comment{border:0;background:transparent;color:#ff667d;font-size:12px;padding:5px}
+.comment-form{display:flex;gap:8px;margin-top:12px}
+.comment-form input{flex:1;min-width:0;margin:0}
+.comment-form button{border:0;background:#fe2c55;color:white;border-radius:9px;padding:0 15px;font-weight:bold}
 </style>
 </head>
 
@@ -517,6 +532,240 @@ function setupViewTracking(video,item,countElement){
  video.addEventListener("ended",()=>clearTimeout(timer));
 }
 
+/* تحميل عدد الإعجابات والتعليقات */
+async function getSocialCounts(videoId){
+ const [likesResult,commentsResult]=await Promise.all([
+  db.from("video_likes").select("id",{count:"exact",head:true})
+   .eq("video_id",videoId),
+  db.from("video_comments").select("id",{count:"exact",head:true})
+   .eq("video_id",videoId)
+ ]);
+
+ if(likesResult.error)console.error(likesResult.error);
+ if(commentsResult.error)console.error(commentsResult.error);
+
+ return {
+  likes:likesResult.count||0,
+  comments:commentsResult.count||0
+ };
+}
+
+/* معرفة هل المستخدم أعجب بالفيديو */
+async function hasUserLiked(videoId){
+ if(!currentUser)return false;
+
+ const {data,error}=await db.from("video_likes")
+  .select("id")
+  .eq("video_id",videoId)
+  .eq("user_id",currentUser.id)
+  .maybeSingle();
+
+ if(error){
+  console.error(error);
+  return false;
+ }
+ return !!data;
+}
+
+/* تحديث أزرار التفاعل */
+async function updateSocialButtons(item,likeButton,commentButton){
+ if(!item?.id)return;
+
+ const [counts,liked]=await Promise.all([
+  getSocialCounts(item.id),
+  hasUserLiked(item.id)
+ ]);
+
+ likeButton.innerHTML="❤️<span>"+counts.likes+"</span>";
+ likeButton.classList.toggle("liked",liked);
+ commentButton.innerHTML="💬<span>"+counts.comments+"</span>";
+}
+
+/* الإعجاب وإلغاء الإعجاب */
+async function toggleLike(item,button,commentButton){
+ if(!currentUser){
+  showAuth();
+  return;
+ }
+
+ button.disabled=true;
+
+ const {data:existing,error:findError}=await db.from("video_likes")
+  .select("id")
+  .eq("video_id",item.id)
+  .eq("user_id",currentUser.id)
+  .maybeSingle();
+
+ if(findError){
+  alert("تعذر التحقق من الإعجاب: "+findError.message);
+  button.disabled=false;
+  return;
+ }
+
+ let error=null;
+
+ if(existing){
+  const result=await db.from("video_likes")
+   .delete()
+   .eq("id",existing.id)
+   .eq("user_id",currentUser.id);
+  error=result.error;
+ }else{
+  const result=await db.from("video_likes").insert({
+   video_id:item.id,
+   user_id:currentUser.id
+  });
+  error=result.error;
+ }
+
+ if(error)alert("تعذر تنفيذ الإعجاب: "+error.message);
+
+ await updateSocialButtons(item,button,commentButton);
+ button.disabled=false;
+}
+
+/* فتح التعليقات */
+async function showComments(item,likeButton,commentButton){
+ if(!item?.id)return;
+
+ if(!currentUser){
+  showAuth();
+  return;
+ }
+
+ openModal();
+ panelContent.innerHTML=`
+  <h2>التعليقات</h2>
+  <div id="commentsList" class="comments-list">
+   <p class="note">جاري تحميل التعليقات...</p>
+  </div>
+  <div class="comment-form">
+   <input id="newComment" maxlength="500" placeholder="اكتب تعليقك...">
+   <button id="sendComment">إرسال</button>
+  </div>
+  <p id="status"></p>
+ `;
+
+ const list=document.getElementById("commentsList");
+
+ const {data:comments,error}=await db.from("video_comments")
+  .select("id,user_id,comment,created_at")
+  .eq("video_id",item.id)
+  .order("created_at",{ascending:true});
+
+ if(error){
+  list.innerHTML="<p>تعذر تحميل التعليقات: "+error.message+"</p>";
+  return;
+ }
+
+ list.innerHTML="";
+
+ if(!comments||comments.length===0){
+  list.innerHTML="<p class='note'>لا توجد تعليقات حتى الآن. كن أول من يعلّق!</p>";
+ }else{
+  const userIds=[...new Set(comments.map(c=>c.user_id))];
+
+  const {data:profiles,error:profilesError}=await db.from("profiles")
+   .select("id,username,avatar_url")
+   .in("id",userIds);
+
+  if(profilesError)console.error(profilesError);
+
+  const profileMap={};
+  (profiles||[]).forEach(p=>profileMap[p.id]=p);
+
+  comments.forEach(comment=>{
+   const profile=profileMap[comment.user_id]||{};
+   const row=document.createElement("div");
+   row.className="comment-item";
+
+   if(profile.avatar_url){
+    const avatar=document.createElement("img");
+    avatar.className="comment-avatar";
+    avatar.src=profile.avatar_url;
+    avatar.onerror=()=>{
+     const fallback=document.createElement("div");
+     fallback.className="comment-avatar-fallback";
+     fallback.textContent="👤";
+     avatar.replaceWith(fallback);
+    };
+    row.appendChild(avatar);
+   }else{
+    const fallback=document.createElement("div");
+    fallback.className="comment-avatar-fallback";
+    fallback.textContent="👤";
+    row.appendChild(fallback);
+   }
+
+   const content=document.createElement("div");
+   content.className="comment-content";
+
+   const username=document.createElement("div");
+   username.className="comment-username";
+   username.textContent=profile.username?"@"+profile.username:"مستخدم";
+
+   const text=document.createElement("div");
+   text.className="comment-text";
+   text.textContent=comment.comment;
+
+   content.append(username,text);
+   row.appendChild(content);
+
+   if(currentUser&&comment.user_id===currentUser.id){
+    const del=document.createElement("button");
+    del.className="delete-comment";
+    del.textContent="حذف";
+    del.onclick=async()=>{
+     if(!confirm("هل تريد حذف تعليقك؟"))return;
+
+     del.disabled=true;
+     const {error:deleteError}=await db.from("video_comments")
+      .delete().eq("id",comment.id).eq("user_id",currentUser.id);
+
+     if(deleteError){
+      alert("تعذر حذف التعليق: "+deleteError.message);
+      del.disabled=false;
+      return;
+     }
+
+     await showComments(item,likeButton,commentButton);
+     await updateSocialButtons(item,likeButton,commentButton);
+    };
+    row.appendChild(del);
+   }
+
+   list.appendChild(row);
+  });
+ }
+
+ document.getElementById("sendComment").onclick=async()=>{
+  const input=document.getElementById("newComment");
+  const comment=input.value.trim();
+
+  if(!comment)return showMessage("اكتب تعليقاً أولاً");
+  if(comment.length>500)return showMessage("التعليق طويل جداً");
+
+  const sendButton=document.getElementById("sendComment");
+  sendButton.disabled=true;
+  showMessage("جاري إرسال التعليق...");
+
+  const {error:insertError}=await db.from("video_comments").insert({
+   video_id:item.id,
+   user_id:currentUser.id,
+   comment:comment
+  });
+
+  if(insertError){
+   showMessage("تعذر إرسال التعليق: "+insertError.message);
+   sendButton.disabled=false;
+   return;
+  }
+
+  await showComments(item,likeButton,commentButton);
+  await updateSocialButtons(item,likeButton,commentButton);
+ };
+}
+
 function openVideoViewer(item){
  if(!item?.video_url)return;
 
@@ -606,6 +855,33 @@ function createCard(url,description="",category="all",item=null){
 
  if(item?.id){
   setupViewTracking(video,item,null);
+
+  /* إضافة أزرار الإعجاب والتعليقات للفيديوهات المنشورة */
+  const social=document.createElement("div");
+  social.className="social-actions";
+
+  const likeButton=document.createElement("button");
+  likeButton.className="social-btn";
+  likeButton.innerHTML="❤️<span>0</span>";
+
+  const commentButton=document.createElement("button");
+  commentButton.className="social-btn";
+  commentButton.innerHTML="💬<span>0</span>";
+
+  likeButton.onclick=e=>{
+   e.stopPropagation();
+   toggleLike(item,likeButton,commentButton);
+  };
+
+  commentButton.onclick=e=>{
+   e.stopPropagation();
+   showComments(item,likeButton,commentButton);
+  };
+
+  social.append(likeButton,commentButton);
+  card.appendChild(social);
+
+  updateSocialButtons(item,likeButton,commentButton);
  }
 
  if(item?.id&&currentUser&&item.user_id===currentUser.id){
