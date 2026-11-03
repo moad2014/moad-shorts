@@ -6,7 +6,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MOAD SHORTS</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:#000;color:white;font-family:Arial,sans-serif;overflow:hidden}
@@ -25,7 +24,8 @@ header{position:fixed;top:0;width:100%;height:60px;z-index:1000;display:flex;ali
 .video-card.paused .play-button{display:block}
 .video-info{position:absolute;bottom:85px;right:15px;left:15px;text-shadow:0 1px 4px #000;font-size:15px;pointer-events:none}
 .video-info p{margin-top:8px;overflow-wrap:anywhere}
-.delete-button{position:absolute;bottom:145px;right:15px;z-index:20;background:#d9233e;color:white;border:0;border-radius:22px;padding:10px 16px;font-size:14px;font-weight:bold}
+.delete-button{position:absolute;bottom:145px;right:15px;z-index:100;background:#d9233e;color:white;border:0;border-radius:22px;padding:11px 17px;font-size:14px;font-weight:bold;cursor:pointer}
+.delete-button:disabled{opacity:.6}
 .empty{height:100vh;height:100dvh;display:flex;justify-content:center;align-items:center;text-align:center;color:#aaa;font-size:20px;scroll-snap-align:start}
 #modal{display:none;position:fixed;inset:0;z-index:5000;background:#000d;align-items:center;justify-content:center;padding:18px}
 .panel{background:#191919;border:1px solid #444;border-radius:18px;padding:22px;width:100%;max-width:390px;max-height:90dvh;overflow:auto}
@@ -40,14 +40,14 @@ header{position:fixed;top:0;width:100%;height:60px;z-index:1000;display:flex;ali
 #fileInput{display:none}
 </style>
 </head>
-
 <body>
+
 <header>
-  <div class="tabs">
-    <div class="tab active" data-tab="all">لك</div>
-    <div class="tab" data-tab="anime">أنمي</div>
-    <div class="tab" data-tab="movies">أفلام</div>
-  </div>
+<div class="tabs">
+<div class="tab active" data-tab="all">لك</div>
+<div class="tab" data-tab="anime">أنمي</div>
+<div class="tab" data-tab="movies">أفلام</div>
+</div>
 </header>
 
 <button id="accountButton">حسابي</button>
@@ -57,37 +57,37 @@ header{position:fixed;top:0;width:100%;height:60px;z-index:1000;display:flex;ali
 <main id="feed"></main>
 
 <div id="modal">
-  <div class="panel">
-    <button class="close" id="closeModal">×</button>
-    <div id="panelContent"></div>
-  </div>
+<div class="panel">
+<button class="close" id="closeModal">×</button>
+<div id="panelContent"></div>
+</div>
 </div>
 
 <script>
-const SUPABASE_URL = "https://hjosofbxfykbfwnfqkko.supabase.co";
-const SUPABASE_KEY = "sb_publishable_Z2_nCZoKteggdWL_jvo5Ow_05eGKO8P";
-const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const SUPABASE_URL="https://hjosofbxfykbfwnfqkko.supabase.co";
+const SUPABASE_KEY="sb_publishable_Z2_nCZoKteggdWL_jvo5Ow_05eGKO8P";
+const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 
-const feed = document.getElementById("feed");
-const modal = document.getElementById("modal");
-const panelContent = document.getElementById("panelContent");
-const accountButton = document.getElementById("accountButton");
-const uploadButton = document.getElementById("uploadButton");
-const soundButton = document.getElementById("soundButton");
-const fileInput = document.getElementById("fileInput");
+const feed=document.getElementById("feed");
+const modal=document.getElementById("modal");
+const panelContent=document.getElementById("panelContent");
+const accountButton=document.getElementById("accountButton");
+const uploadButton=document.getElementById("uploadButton");
+const soundButton=document.getElementById("soundButton");
+const fileInput=document.getElementById("fileInput");
 
-let currentUser = null;
-let soundEnabled = false;
-let activeVideo = null;
-let currentTab = "all";
-let observer;
+let currentUser=null;
+let soundEnabled=false;
+let activeVideo=null;
+let currentTab="all";
+let observer=null;
 
-const oldVideos = [
- "https://raw.githubusercontent.com/moad2014/moad-shorts/main/2026-10-21-131624724.mp4",
- "https://raw.githubusercontent.com/moad2014/moad-shorts/main/video2.mp4",
- "https://raw.githubusercontent.com/moad2014/moad-shorts/main/video4.mp4",
- "https://cdn.rapidfile.cc/GTq7lpRHhs/video3.mp4",
- "https://cdn.rapidfile.cc/XoIS5tzlFp/video5.mp4"
+const oldVideos=[
+"https://raw.githubusercontent.com/moad2014/moad-shorts/main/2026-10-21-131624724.mp4",
+"https://raw.githubusercontent.com/moad2014/moad-shorts/main/video2.mp4",
+"https://raw.githubusercontent.com/moad2014/moad-shorts/main/video4.mp4",
+"https://cdn.rapidfile.cc/GTq7lpRHhs/video3.mp4",
+"https://cdn.rapidfile.cc/XoIS5tzlFp/video5.mp4"
 ];
 
 function openModal(){modal.style.display="flex"}
@@ -95,438 +95,438 @@ function closeModal(){modal.style.display="none"}
 document.getElementById("closeModal").onclick=closeModal;
 
 function showMessage(message){
- const status=document.getElementById("status");
- if(status)status.textContent=message;
+const status=document.getElementById("status");
+if(status)status.textContent=message;
 }
 
 function showAuth(){
- openModal();
- panelContent.innerHTML=`
- <h2>MOAD SHORTS</h2>
- <input id="email" type="email" placeholder="البريد الإلكتروني">
- <input id="password" type="password" placeholder="كلمة المرور">
- <button class="action" id="login">تسجيل الدخول</button>
- <button class="action secondary" id="signup">إنشاء حساب جديد</button>
- <p class="note">قد تحتاج لتأكيد بريدك الإلكتروني قبل تسجيل الدخول.</p>
- <p id="status"></p>`;
+openModal();
+panelContent.innerHTML=`
+<h2>MOAD SHORTS</h2>
+<input id="email" type="email" placeholder="البريد الإلكتروني">
+<input id="password" type="password" placeholder="كلمة المرور">
+<button class="action" id="login">تسجيل الدخول</button>
+<button class="action secondary" id="signup">إنشاء حساب جديد</button>
+<p class="note">قد تحتاج لتأكيد بريدك الإلكتروني قبل تسجيل الدخول.</p>
+<p id="status"></p>`;
 
- document.getElementById("login").onclick=async()=>{
-  const email=document.getElementById("email").value.trim();
-  const password=document.getElementById("password").value;
-  if(!email||!password)return showMessage("اكتب البريد وكلمة المرور");
-  const {error}=await db.auth.signInWithPassword({email,password});
-  if(error)return showMessage(error.message);
-  closeModal();
- };
+document.getElementById("login").onclick=async()=>{
+const email=document.getElementById("email").value.trim();
+const password=document.getElementById("password").value;
+if(!email||!password)return showMessage("اكتب البريد وكلمة المرور");
+const {error}=await db.auth.signInWithPassword({email,password});
+if(error)return showMessage(error.message);
+closeModal();
+await refreshUserAndVideos();
+};
 
- document.getElementById("signup").onclick=async()=>{
-  const email=document.getElementById("email").value.trim();
-  const password=document.getElementById("password").value;
-  if(!email||!password)return showMessage("اكتب البريد وكلمة المرور");
-  if(password.length<6)return showMessage("كلمة المرور لازم تكون 6 أحرف على الأقل");
-
-  showMessage("جاري إنشاء الحساب...");
-  const {data,error}=await db.auth.signUp({
-   email,
-   password,
-   options:{
-    emailRedirectTo:"https://moad2014.github.io/moad-shorts/"
-   }
-  });
-
-  if(error)return showMessage(error.message);
-  if(data.session){
-   showMessage("تم إنشاء الحساب وتسجيل الدخول!");
-   setTimeout(closeModal,1200);
-  }else{
-   showMessage("تم إنشاء الحساب. افتح بريدك واضغط رابط التأكيد.");
-  }
- };
+document.getElementById("signup").onclick=async()=>{
+const email=document.getElementById("email").value.trim();
+const password=document.getElementById("password").value;
+if(!email||!password)return showMessage("اكتب البريد وكلمة المرور");
+if(password.length<6)return showMessage("كلمة المرور لازم تكون 6 أحرف على الأقل");
+showMessage("جاري إنشاء الحساب...");
+const {data,error}=await db.auth.signUp({
+email,password,
+options:{emailRedirectTo:"https://moad2014.github.io/moad-shorts/"}
+});
+if(error)return showMessage(error.message);
+if(data.session){
+showMessage("تم إنشاء الحساب وتسجيل الدخول!");
+setTimeout(async()=>{closeModal();await refreshUserAndVideos()},1200);
+}else{
+showMessage("تم إنشاء الحساب. افتح بريدك واضغط رابط التأكيد.");
+}
+};
 }
 
 async function showAccount(){
- openModal();
- if(!currentUser){showAuth();return}
+openModal();
+if(!currentUser){showAuth();return}
+panelContent.innerHTML=`
+<h2>حسابي</h2>
+<p id="accountEmail" style="text-align:center;overflow-wrap:anywhere"></p>
+<br>
+<button class="action" id="myUpload">نشر فيديو جديد</button>
+<button class="action secondary" id="logout">تسجيل الخروج</button>
+<p id="status"></p>`;
+document.getElementById("accountEmail").textContent=currentUser.email;
+document.getElementById("myUpload").onclick=()=>{
+closeModal();fileInput.click();
+};
+document.getElementById("logout").onclick=async()=>{
+await db.auth.signOut();
+currentUser=null;
+closeModal();
+await loadVideos();
+updateButtons();
+};
+}
 
- panelContent.innerHTML=`
- <h2>حسابي</h2>
- <p style="text-align:center;overflow-wrap:anywhere"></p>
- <br>
- <button class="action" id="myUpload">نشر فيديو جديد</button>
- <button class="action secondary" id="logout">تسجيل الخروج</button>
- <p id="status"></p>`;
+function updateButtons(){
+accountButton.textContent=currentUser?"حسابي":"تسجيل الدخول";
+uploadButton.style.display="block";
+}
 
- panelContent.querySelector("p").textContent=currentUser.email;
-
- document.getElementById("myUpload").onclick=()=>{
-  closeModal();
-  fileInput.click();
- };
-
- document.getElementById("logout").onclick=async()=>{
-  await db.auth.signOut();
-  closeModal();
- };
+async function refreshUserAndVideos(){
+const {data}=await db.auth.getSession();
+currentUser=data.session?.user||null;
+updateButtons();
+await loadVideos();
 }
 
 accountButton.onclick=showAccount;
 
-async function updateUser(user){
- currentUser=user;
- accountButton.textContent=user?"حسابي":"تسجيل الدخول";
- uploadButton.style.display="block";
-}
-
 db.auth.onAuthStateChange((_event,session)=>{
- updateUser(session?.user||null);
+currentUser=session?.user||null;
+updateButtons();
 });
 
 async function initialize(){
- const {data}=await db.auth.getSession();
- await updateUser(data.session?.user||null);
- await loadVideos();
+const {data}=await db.auth.getSession();
+currentUser=data.session?.user||null;
+updateButtons();
+await loadVideos();
 }
 
 function shuffle(items){
- for(let i=items.length-1;i>0;i--){
-  const j=Math.floor(Math.random()*(i+1));
-  [items[i],items[j]]=[items[j],items[i]];
- }
- return items;
+for(let i=items.length-1;i>0;i--){
+const j=Math.floor(Math.random()*(i+1));
+[items[i],items[j]]=[items[j],items[i]];
+}
+return items;
 }
 
 function stopAllVideos(except=null){
- document.querySelectorAll(".video-card video").forEach(video=>{
-  if(video!==except){
-   video.pause();
-   video.muted=true;
-   video.closest(".video-card").classList.add("paused");
-  }
- });
+document.querySelectorAll(".video-card video").forEach(video=>{
+if(video!==except){
+video.pause();
+video.muted=true;
+video.closest(".video-card").classList.add("paused");
+}
+});
 }
 
 function playVideo(video){
- stopAllVideos(video);
- video.muted=!soundEnabled;
- video.play().then(()=>{
-  video.closest(".video-card").classList.remove("paused");
-  activeVideo=video;
- }).catch(()=>{
-  video.closest(".video-card").classList.add("paused");
- });
+stopAllVideos(video);
+video.muted=!soundEnabled;
+video.play().then(()=>{
+video.closest(".video-card").classList.remove("paused");
+activeVideo=video;
+}).catch(()=>{
+video.closest(".video-card").classList.add("paused");
+});
 }
 
 function createCard(url,description="",videoId=null,ownerId=null){
- const card=document.createElement("section");
- card.className="video-card";
+const card=document.createElement("section");
+card.className="video-card";
 
- const video=document.createElement("video");
- video.playsInline=true;
- video.setAttribute("webkit-playsinline","");
- video.preload="metadata";
+const video=document.createElement("video");
+video.playsInline=true;
+video.setAttribute("webkit-playsinline","");
+video.preload="metadata";
 
- const source=document.createElement("source");
- source.src=url;
- source.type="video/mp4";
- video.appendChild(source);
+const source=document.createElement("source");
+source.src=url;
+source.type="video/mp4";
+video.appendChild(source);
 
- const button=document.createElement("button");
- button.className="play-button";
- button.textContent="▶";
+const playButton=document.createElement("button");
+playButton.className="play-button";
+playButton.textContent="▶";
 
- const info=document.createElement("div");
- info.className="video-info";
- const desc=document.createElement("p");
- desc.textContent=description;
- info.appendChild(desc);
+const info=document.createElement("div");
+info.className="video-info";
+const desc=document.createElement("p");
+desc.textContent=description;
+info.appendChild(desc);
 
- card.append(video,button,info);
- card.classList.add("paused");
+card.append(video,playButton,info);
+card.classList.add("paused");
 
- // زر الحذف يظهر لصاحب الفيديو فقط
- if(videoId && currentUser && ownerId===currentUser.id){
-  const deleteButton=document.createElement("button");
-  deleteButton.className="delete-button";
-  deleteButton.textContent="🗑️ حذف الفيديو";
+// التحقق من ملكية الفيديو قبل إظهار زر الحذف
+const isOwner=Boolean(
+currentUser &&
+ownerId &&
+String(ownerId)===String(currentUser.id) &&
+videoId
+);
 
-  deleteButton.onclick=async(event)=>{
-   event.stopPropagation();
+if(isOwner){
+const deleteButton=document.createElement("button");
+deleteButton.className="delete-button";
+deleteButton.textContent="🗑️ حذف الفيديو";
 
-   if(!confirm("هل أنت متأكد إنك تبي تحذف الفيديو نهائياً؟"))return;
+deleteButton.onclick=async(event)=>{
+event.stopPropagation();
 
-   deleteButton.disabled=true;
-   deleteButton.textContent="جاري الحذف...";
+if(!confirm("هل أنت متأكد إنك تبي تحذف الفيديو نهائياً؟"))return;
 
-   try{
-    // استخراج مسار الملف من رابط Supabase
-    const marker="/storage/v1/object/public/videos/";
-    const position=url.indexOf(marker);
-    if(position===-1)throw new Error("تعذر تحديد ملف الفيديو");
+deleteButton.disabled=true;
+deleteButton.textContent="جاري الحذف...";
 
-    const path=decodeURIComponent(url.substring(position+marker.length));
+try{
+// التأكد من أن المستخدم ما زال مسجلاً دخوله
+const {data:sessionData}=await db.auth.getSession();
+const user=sessionData.session?.user;
 
-    // حذف الملف من التخزين
-    const {error:storageError}=await db.storage
-     .from("videos")
-     .remove([path]);
+if(!user||user.id!==ownerId){
+throw new Error("سجل دخولك بالحساب صاحب الفيديو");
+}
 
-    if(storageError)throw storageError;
+// استخراج مسار الملف من رابط التخزين
+const marker="/storage/v1/object/public/videos/";
+const position=url.indexOf(marker);
+if(position===-1)throw new Error("رابط الفيديو غير تابع لمخزن الفيديوهات");
 
-    // حذف سجل الفيديو من الجدول
-    const {error:rowError}=await db
-     .from("videos")
-     .delete()
-     .eq("id",videoId)
-     .eq("user_id",currentUser.id);
+// حذف سجل الفيديو الخاص بالمستخدم
+const {data:deletedRows,error:rowError}=await db
+.from("videos")
+.delete()
+.eq("id",videoId)
+.eq("user_id",user.id)
+.select("id");
 
-    if(rowError)throw rowError;
+if(rowError)throw rowError;
+if(!deletedRows||deletedRows.length===0){
+throw new Error("لم يتم حذف سجل الفيديو. تحقق من صلاحيات الحذف.");
+}
 
-    if(activeVideo===video)activeVideo=null;
-    video.pause();
-    card.remove();
+// حذف الملف من التخزين
+const path=decodeURIComponent(url.substring(position+marker.length));
+const {error:storageError}=await db.storage
+.from("videos")
+.remove([path]);
 
-   }catch(error){
-    alert("ما قدرناش نحذف الفيديو: "+error.message);
-    deleteButton.disabled=false;
-    deleteButton.textContent="🗑️ حذف الفيديو";
-   }
-  };
+if(storageError){
+alert("تم حذف الفيديو من الموقع، لكن تعذر حذف الملف من التخزين: "+storageError.message);
+}
 
-  card.appendChild(deleteButton);
- }
+if(activeVideo===video)activeVideo=null;
+video.pause();
+card.remove();
 
- card.addEventListener("click",event=>{
-  if(event.target===button||event.target===video){
-   if(video.paused)playVideo(video);
-   else{
-    video.pause();
-    card.classList.add("paused");
-   }
-  }
- });
+}catch(error){
+alert("تعذر حذف الفيديو: "+error.message);
+deleteButton.disabled=false;
+deleteButton.textContent="🗑️ حذف الفيديو";
+}
+};
 
- video.addEventListener("ended",()=>{
-  card.classList.add("paused");
- });
+card.appendChild(deleteButton);
+}
 
- video.addEventListener("error",()=>{
-  card.classList.add("paused");
- });
+card.addEventListener("click",event=>{
+if(event.target===playButton||event.target===video){
+if(video.paused)playVideo(video);
+else{
+video.pause();
+card.classList.add("paused");
+}
+}
+});
 
- return card;
+video.addEventListener("ended",()=>card.classList.add("paused"));
+video.addEventListener("error",()=>card.classList.add("paused"));
+
+return card;
 }
 
 async function loadVideos(){
- stopAllVideos();
- activeVideo=null;
- feed.innerHTML="";
+stopAllVideos();
+activeVideo=null;
+feed.innerHTML="";
 
- let cards=[];
+let cards=[];
 
- oldVideos.forEach(url=>{
-  cards.push(createCard(url));
- });
+oldVideos.forEach(url=>cards.push(createCard(url)));
 
- const {data,error}=await db
-  .from("videos")
-  .select("id,user_id,video_url,description,created_at")
-  .order("created_at",{ascending:false});
+const {data,error}=await db
+.from("videos")
+.select("id,user_id,video_url,description,created_at")
+.order("created_at",{ascending:false});
 
- if(error){
-  console.error(error);
- }else if(data){
-  data.forEach(item=>{
-   cards.push(createCard(
-    item.video_url,
-    item.description||"",
-    item.id,
-    item.user_id
-   ));
-  });
- }
+if(error){
+console.error("خطأ تحميل الفيديوهات:",error);
+}else if(data){
+data.forEach(item=>{
+cards.push(createCard(
+item.video_url,
+item.description||"",
+item.id,
+item.user_id
+));
+});
+}
 
- shuffle(cards);
- cards.forEach(card=>feed.appendChild(card));
+shuffle(cards);
+cards.forEach(card=>feed.appendChild(card));
 
- if(observer)observer.disconnect();
+if(observer)observer.disconnect();
 
- observer=new IntersectionObserver(entries=>{
-  const visible=entries
-   .filter(entry=>entry.isIntersecting)
-   .sort((a,b)=>b.intersectionRatio-a.intersectionRatio)[0];
+observer=new IntersectionObserver(entries=>{
+const visible=entries
+.filter(entry=>entry.isIntersecting)
+.sort((a,b)=>b.intersectionRatio-a.intersectionRatio)[0];
 
-  if(visible&&visible.intersectionRatio>=0.7){
-   const video=visible.target.querySelector("video");
-   if(activeVideo!==video||video.paused)playVideo(video);
-  }
- },{threshold:[0,0.7,1]});
+if(visible&&visible.intersectionRatio>=0.7){
+const video=visible.target.querySelector("video");
+if(activeVideo!==video||video.paused)playVideo(video);
+}
+},{threshold:[0,0.7,1]});
 
- cards.forEach(card=>observer.observe(card));
- applyTab(currentTab);
+cards.forEach(card=>observer.observe(card));
+applyTab(currentTab);
 }
 
 function applyTab(category){
- currentTab=category;
- stopAllVideos();
- activeVideo=null;
- feed.scrollTop=0;
+currentTab=category;
+stopAllVideos();
+activeVideo=null;
+feed.scrollTop=0;
 
- document.querySelectorAll(".video-card").forEach(card=>{
-  card.style.display=category==="all"?"flex":"none";
- });
+document.querySelectorAll(".video-card").forEach(card=>{
+card.style.display=category==="all"?"flex":"none";
+});
 
- document.querySelectorAll(".empty").forEach(item=>item.remove());
+document.querySelectorAll(".empty").forEach(item=>item.remove());
 
- if(category!=="all"){
-  const empty=document.createElement("div");
-  empty.className="empty";
-  empty.textContent=category==="anime"
-   ?"لا توجد فيديوهات أنمي حالياً"
-   :"لا توجد فيديوهات أفلام حالياً";
-  feed.appendChild(empty);
- }
+if(category!=="all"){
+const empty=document.createElement("div");
+empty.className="empty";
+empty.textContent=category==="anime"
+?"لا توجد فيديوهات أنمي حالياً"
+:"لا توجد فيديوهات أفلام حالياً";
+feed.appendChild(empty);
+}
 }
 
 document.querySelectorAll(".tab").forEach(tab=>{
- tab.onclick=()=>{
-  document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
-  tab.classList.add("active");
-  applyTab(tab.dataset.tab);
- };
+tab.onclick=()=>{
+document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+tab.classList.add("active");
+applyTab(tab.dataset.tab);
+};
 });
 
 soundButton.onclick=()=>{
- soundEnabled=!soundEnabled;
- if(activeVideo)activeVideo.muted=!soundEnabled;
- soundButton.textContent=soundEnabled?"🔊 الصوت مفتوح":"🔇 الصوت مغلق";
+soundEnabled=!soundEnabled;
+if(activeVideo)activeVideo.muted=!soundEnabled;
+soundButton.textContent=soundEnabled?"🔊 الصوت مفتوح":"🔇 الصوت مغلق";
 };
 
 uploadButton.onclick=()=>{
- if(!currentUser){showAuth();return}
- fileInput.click();
+if(!currentUser){showAuth();return}
+fileInput.click();
 };
 
 function validateVideo(file){
- return new Promise((resolve,reject)=>{
-  if(!file.type.startsWith("video/")){
-   reject("الملف المختار مش فيديو");
-   return;
-  }
-  if(file.size>50*1024*1024){
-   reject("حجم الفيديو أكبر من 50 MB");
-   return;
-  }
+return new Promise((resolve,reject)=>{
+if(!file.type.startsWith("video/"))return reject("الملف المختار مش فيديو");
+if(file.size>50*1024*1024)return reject("حجم الفيديو أكبر من 50 MB");
 
-  const video=document.createElement("video");
-  video.preload="metadata";
-  video.muted=true;
+const video=document.createElement("video");
+video.preload="metadata";
+video.muted=true;
 
-  video.onloadedmetadata=()=>{
-   URL.revokeObjectURL(video.src);
-   if(!Number.isFinite(video.duration)||video.duration<=0){
-    reject("تعذر قراءة مدة الفيديو");
-   }else if(video.duration>90){
-    reject("مدة الفيديو أطول من 90 ثانية");
-   }else if(video.videoHeight<=video.videoWidth){
-    reject("لازم الفيديو يكون عمودي");
-   }else{
-    resolve(true);
-   }
-  };
+video.onloadedmetadata=()=>{
+URL.revokeObjectURL(video.src);
+if(!Number.isFinite(video.duration)||video.duration<=0)reject("تعذر قراءة مدة الفيديو");
+else if(video.duration>90)reject("مدة الفيديو أطول من 90 ثانية");
+else if(video.videoHeight<=video.videoWidth)reject("لازم الفيديو يكون عمودي");
+else resolve(true);
+};
 
-  video.onerror=()=>{
-   URL.revokeObjectURL(video.src);
-   reject("تعذر قراءة الفيديو");
-  };
+video.onerror=()=>{
+URL.revokeObjectURL(video.src);
+reject("تعذر قراءة الفيديو");
+};
 
-  video.src=URL.createObjectURL(file);
- });
+video.src=URL.createObjectURL(file);
+});
 }
 
 fileInput.onchange=async()=>{
- const file=fileInput.files[0];
- if(!file)return;
+const file=fileInput.files[0];
+if(!file)return;
 
- if(!currentUser){
-  fileInput.value="";
-  showAuth();
-  return;
- }
+if(!currentUser){
+fileInput.value="";
+showAuth();
+return;
+}
 
- openModal();
- panelContent.innerHTML=`
- <h2>نشر فيديو</h2>
- <textarea id="description" placeholder="اكتب وصف الفيديو (اختياري)"></textarea>
- <p id="status">جاري فحص الفيديو...</p>`;
+openModal();
+panelContent.innerHTML=`
+<h2>نشر فيديو</h2>
+<textarea id="description" placeholder="اكتب وصف الفيديو (اختياري)"></textarea>
+<p id="status">جاري فحص الفيديو...</p>`;
 
- try{
-  await validateVideo(file);
- }catch(error){
-  showMessage(error);
-  fileInput.value="";
-  return;
- }
+try{
+await validateVideo(file);
+}catch(error){
+showMessage(error);
+fileInput.value="";
+return;
+}
 
- panelContent.innerHTML=`
- <h2>نشر فيديو</h2>
- <textarea id="description" placeholder="اكتب وصف الفيديو (اختياري)"></textarea>
- <button class="action" id="publish">نشر الآن</button>
- <p class="note">الفيديو عمودي، مدته لا تتجاوز 90 ثانية وحجمه لا يتجاوز 50 MB.</p>
- <p id="status"></p>`;
+panelContent.innerHTML=`
+<h2>نشر فيديو</h2>
+<textarea id="description" placeholder="اكتب وصف الفيديو (اختياري)"></textarea>
+<button class="action" id="publish">نشر الآن</button>
+<p class="note">الفيديو عمودي، مدته لا تتجاوز 90 ثانية وحجمه لا يتجاوز 50 MB.</p>
+<p id="status"></p>`;
 
- document.getElementById("publish").onclick=async()=>{
-  const button=document.getElementById("publish");
-  const description=document.getElementById("description").value.trim();
-  button.disabled=true;
-  showMessage("جاري رفع الفيديو... لا تغلق الصفحة");
+document.getElementById("publish").onclick=async()=>{
+const button=document.getElementById("publish");
+const description=document.getElementById("description").value.trim();
+button.disabled=true;
+showMessage("جاري رفع الفيديو... لا تغلق الصفحة");
 
-  try{
-   const {data:sessionData}=await db.auth.getSession();
-   const user=sessionData.session?.user;
-   if(!user)throw new Error("سجل دخولك من جديد");
+let uploadedPath=null;
 
-   const ext=(file.name.split(".").pop()||"mp4").toLowerCase();
-   const path=user.id+"/"+crypto.randomUUID()+"."+ext;
+try{
+const {data:sessionData}=await db.auth.getSession();
+const user=sessionData.session?.user;
+if(!user)throw new Error("سجل دخولك من جديد");
 
-   const {error:uploadError}=await db.storage
-    .from("videos")
-    .upload(path,file,{
-     contentType:file.type,
-     upsert:false
-    });
+const ext=(file.name.split(".").pop()||"mp4").toLowerCase();
+const path=user.id+"/"+crypto.randomUUID()+"."+ext;
+uploadedPath=path;
 
-   if(uploadError)throw uploadError;
+const {error:uploadError}=await db.storage
+.from("videos")
+.upload(path,file,{contentType:file.type,upsert:false});
 
-   const {data:urlData}=db.storage
-    .from("videos")
-    .getPublicUrl(path);
+if(uploadError)throw uploadError;
 
-   const {error:insertError}=await db
-    .from("videos")
-    .insert({
-     user_id:user.id,
-     video_url:urlData.publicUrl,
-     description:description
-    });
+const {data:urlData}=db.storage.from("videos").getPublicUrl(path);
 
-   if(insertError){
-    await db.storage.from("videos").remove([path]);
-    throw insertError;
-   }
+const {error:insertError}=await db.from("videos").insert({
+user_id:user.id,
+video_url:urlData.publicUrl,
+description:description
+});
 
-   showMessage("تم نشر الفيديو بنجاح! 🎉");
-   fileInput.value="";
+if(insertError)throw insertError;
 
-   setTimeout(async()=>{
-    closeModal();
-    await loadVideos();
-   },1200);
+showMessage("تم نشر الفيديو بنجاح! 🎉");
+fileInput.value="";
 
-  }catch(error){
-   showMessage("حدث خطأ: "+error.message);
-   button.disabled=false;
-  }
- };
+setTimeout(async()=>{
+closeModal();
+await loadVideos();
+},1200);
+
+}catch(error){
+if(uploadedPath){
+await db.storage.from("videos").remove([uploadedPath]);
+}
+showMessage("حدث خطأ: "+error.message);
+button.disabled=false;
+}
+};
 };
 
 initialize();
