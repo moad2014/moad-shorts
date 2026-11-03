@@ -9,8 +9,8 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:#000;color:white;font-family:Arial,sans-serif;overflow:hidden}
-header{position:fixed;top:0;width:100%;height:60px;z-index:1000;display:flex;align-items:center;justify-content:center;background:linear-gradient(#000d,transparent)}
-.tabs{display:flex;gap:25px;font-size:17px;font-weight:bold}
+header{position:fixed;top:0;width:100%;height:60px;z-index:1000;display:flex;align-items:center;justify-content:center;background:linear-gradient(#000e,transparent)}
+.tabs{display:flex;gap:20px;font-size:16px;font-weight:bold;white-space:nowrap}
 .tab{opacity:.65;cursor:pointer;padding-bottom:8px}
 .tab.active{opacity:1;border-bottom:3px solid white}
 #accountButton{position:fixed;top:70px;right:12px;z-index:2000;background:#222;color:white;border:1px solid #777;border-radius:25px;padding:9px 13px}
@@ -20,12 +20,28 @@ header{position:fixed;top:0;width:100%;height:60px;z-index:1000;display:flex;ali
 #feed::-webkit-scrollbar{display:none}
 .video-card{width:100%;height:100vh;height:100dvh;position:relative;scroll-snap-align:start;background:#000;display:flex;justify-content:center;align-items:center}
 .video-card video{width:100%;height:100%;object-fit:contain;background:black}
-.play-button{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);border:0;background:#0008;color:white;font-size:45px;width:75px;height:75px;border-radius:50%;display:none}
+.play-button{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);border:0;background:#0008;color:white;font-size:40px;width:70px;height:70px;border-radius:50%;display:none}
 .video-card.paused .play-button{display:block}
 .video-info{position:absolute;bottom:85px;right:15px;left:15px;text-shadow:0 1px 4px #000;font-size:15px;pointer-events:none}
 .video-info p{margin-top:8px;overflow-wrap:anywhere}
-.delete-button{position:absolute;bottom:145px;right:15px;z-index:100;background:#d9233e;color:white;border:0;border-radius:22px;padding:11px 17px;font-size:14px;font-weight:bold;cursor:pointer}
+
+/* زر حذف صغير على يسار الشاشة */
+.delete-button{
+position:absolute;
+bottom:125px;
+left:12px;
+z-index:100;
+background:#d9233e;
+color:white;
+border:0;
+border-radius:20px;
+padding:6px 10px;
+font-size:11px;
+font-weight:bold;
+cursor:pointer;
+}
 .delete-button:disabled{opacity:.6}
+
 .empty{height:100vh;height:100dvh;display:flex;justify-content:center;align-items:center;text-align:center;color:#aaa;font-size:20px;scroll-snap-align:start}
 #modal{display:none;position:fixed;inset:0;z-index:5000;background:#000d;align-items:center;justify-content:center;padding:18px}
 .panel{background:#191919;border:1px solid #444;border-radius:18px;padding:22px;width:100%;max-width:390px;max-height:90dvh;overflow:auto}
@@ -47,6 +63,7 @@ header{position:fixed;top:0;width:100%;height:60px;z-index:1000;display:flex;ali
 <div class="tab active" data-tab="all">لك</div>
 <div class="tab" data-tab="anime">أنمي</div>
 <div class="tab" data-tab="movies">أفلام</div>
+<div class="tab" data-tab="stories">قصص</div>
 </div>
 </header>
 
@@ -82,12 +99,30 @@ let activeVideo=null;
 let currentTab="all";
 let observer=null;
 
+/* فيديوهات قسم لك القديمة */
 const oldVideos=[
 "https://raw.githubusercontent.com/moad2014/moad-shorts/main/2026-10-21-131624724.mp4",
 "https://raw.githubusercontent.com/moad2014/moad-shorts/main/video2.mp4",
 "https://raw.githubusercontent.com/moad2014/moad-shorts/main/video4.mp4",
 "https://cdn.rapidfile.cc/GTq7lpRHhs/video3.mp4",
 "https://cdn.rapidfile.cc/XoIS5tzlFp/video5.mp4"
+];
+
+/*
+أضف فيديوهات الأنمي هنا.
+كل فيديو يحتاج رابط ووصف.
+مثال:
+{url:"رابط الفيديو",description:"ناروتو"}
+*/
+const animeVideos=[
+];
+
+/* أضف فيديوهات الأفلام هنا */
+const movieVideos=[
+];
+
+/* أضف قصص اليوتيوبرز هنا */
+const storyVideos=[
 ];
 
 function openModal(){modal.style.display="flex"}
@@ -218,9 +253,10 @@ video.closest(".video-card").classList.add("paused");
 });
 }
 
-function createCard(url,description="",videoId=null,ownerId=null){
+function createCard(url,description="",videoId=null,ownerId=null,category="all"){
 const card=document.createElement("section");
 card.className="video-card";
+card.dataset.category=category;
 
 const video=document.createElement("video");
 video.playsInline=true;
@@ -229,7 +265,6 @@ video.preload="metadata";
 
 const source=document.createElement("source");
 source.src=url;
-source.type="video/mp4";
 video.appendChild(source);
 
 const playButton=document.createElement("button");
@@ -245,29 +280,24 @@ info.appendChild(desc);
 card.append(video,playButton,info);
 card.classList.add("paused");
 
-// التحقق من ملكية الفيديو قبل إظهار زر الحذف
 const isOwner=Boolean(
-currentUser &&
-ownerId &&
-String(ownerId)===String(currentUser.id) &&
-videoId
+currentUser && ownerId &&
+String(ownerId)===String(currentUser.id) && videoId
 );
 
 if(isOwner){
 const deleteButton=document.createElement("button");
 deleteButton.className="delete-button";
-deleteButton.textContent="🗑️ حذف الفيديو";
+deleteButton.textContent="🗑️ حذف";
 
 deleteButton.onclick=async(event)=>{
 event.stopPropagation();
-
 if(!confirm("هل أنت متأكد إنك تبي تحذف الفيديو نهائياً؟"))return;
 
 deleteButton.disabled=true;
-deleteButton.textContent="جاري الحذف...";
+deleteButton.textContent="جاري الحذف";
 
 try{
-// التأكد من أن المستخدم ما زال مسجلاً دخوله
 const {data:sessionData}=await db.auth.getSession();
 const user=sessionData.session?.user;
 
@@ -275,12 +305,12 @@ if(!user||user.id!==ownerId){
 throw new Error("سجل دخولك بالحساب صاحب الفيديو");
 }
 
-// استخراج مسار الملف من رابط التخزين
 const marker="/storage/v1/object/public/videos/";
 const position=url.indexOf(marker);
 if(position===-1)throw new Error("رابط الفيديو غير تابع لمخزن الفيديوهات");
 
-// حذف سجل الفيديو الخاص بالمستخدم
+const path=decodeURIComponent(url.substring(position+marker.length));
+
 const {data:deletedRows,error:rowError}=await db
 .from("videos")
 .delete()
@@ -293,8 +323,6 @@ if(!deletedRows||deletedRows.length===0){
 throw new Error("لم يتم حذف سجل الفيديو. تحقق من صلاحيات الحذف.");
 }
 
-// حذف الملف من التخزين
-const path=decodeURIComponent(url.substring(position+marker.length));
 const {error:storageError}=await db.storage
 .from("videos")
 .remove([path]);
@@ -310,7 +338,7 @@ card.remove();
 }catch(error){
 alert("تعذر حذف الفيديو: "+error.message);
 deleteButton.disabled=false;
-deleteButton.textContent="🗑️ حذف الفيديو";
+deleteButton.textContent="🗑️ حذف";
 }
 };
 
@@ -333,6 +361,18 @@ video.addEventListener("error",()=>card.classList.add("paused"));
 return card;
 }
 
+function addStaticVideos(list,category,cards){
+list.forEach(item=>{
+cards.push(createCard(
+item.url,
+item.description||"",
+null,
+null,
+category
+));
+});
+}
+
 async function loadVideos(){
 stopAllVideos();
 activeVideo=null;
@@ -340,8 +380,12 @@ feed.innerHTML="";
 
 let cards=[];
 
-oldVideos.forEach(url=>cards.push(createCard(url)));
+/* فيديوهات قسم لك القديمة */
+oldVideos.forEach(url=>{
+cards.push(createCard(url,"",null,null,"all"));
+});
 
+/* الفيديوهات التي ينشرها المستخدمون تظهر في لك فقط */
 const {data,error}=await db
 .from("videos")
 .select("id,user_id,video_url,description,created_at")
@@ -355,10 +399,16 @@ cards.push(createCard(
 item.video_url,
 item.description||"",
 item.id,
-item.user_id
+item.user_id,
+"all"
 ));
 });
 }
+
+/* الأقسام التي يتحكم فيها صاحب الموقع من الكود */
+addStaticVideos(animeVideos,"anime",cards);
+addStaticVideos(movieVideos,"movies",cards);
+addStaticVideos(storyVideos,"stories",cards);
 
 shuffle(cards);
 cards.forEach(card=>feed.appendChild(card));
@@ -387,17 +437,25 @@ activeVideo=null;
 feed.scrollTop=0;
 
 document.querySelectorAll(".video-card").forEach(card=>{
-card.style.display=category==="all"?"flex":"none";
+card.style.display=card.dataset.category===category?"flex":"none";
 });
 
 document.querySelectorAll(".empty").forEach(item=>item.remove());
 
-if(category!=="all"){
+const hasVideos=Array.from(document.querySelectorAll(".video-card"))
+.some(card=>card.dataset.category===category);
+
+if(!hasVideos){
 const empty=document.createElement("div");
 empty.className="empty";
-empty.textContent=category==="anime"
-?"لا توجد فيديوهات أنمي حالياً"
-:"لا توجد فيديوهات أفلام حالياً";
+
+const messages={
+anime:"لا توجد فيديوهات أنمي حالياً",
+movies:"لا توجد فيديوهات أفلام حالياً",
+stories:"لا توجد قصص حالياً"
+};
+
+empty.textContent=messages[category]||"لا توجد فيديوهات حالياً";
 feed.appendChild(empty);
 }
 }
@@ -417,6 +475,10 @@ soundButton.textContent=soundEnabled?"🔊 الصوت مفتوح":"🔇 الصو
 };
 
 uploadButton.onclick=()=>{
+if(currentTab!=="all"){
+alert("النشر متاح في قسم لك فقط");
+return;
+}
 if(!currentUser){showAuth();return}
 fileInput.click();
 };
