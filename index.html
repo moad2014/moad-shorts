@@ -27,7 +27,6 @@ header{position:fixed;top:0;width:100%;height:60px;z-index:1000;display:flex;ali
 .video-info{position:absolute;bottom:85px;right:15px;left:15px;text-shadow:0 1px 4px #000;font-size:15px;pointer-events:none}
 .video-info p{margin-top:8px;overflow-wrap:anywhere}
 .owner-name{font-weight:bold;pointer-events:auto;cursor:pointer;display:inline-block}
-.view-count{display:block;margin-top:8px;font-size:13px;color:#eee}
 .delete-button{position:absolute;bottom:125px;left:12px;z-index:100;background:#d9233e;color:white;border:0;border-radius:20px;padding:6px 10px;font-size:11px;font-weight:bold}
 .empty{height:100vh;height:100dvh;display:flex;justify-content:center;align-items:center;text-align:center;color:#aaa;font-size:19px;scroll-snap-align:start;padding:20px}
 #modal{display:none;position:fixed;inset:0;z-index:5000;background:#000e;align-items:center;justify-content:center;padding:15px}
@@ -120,7 +119,6 @@ const oldVideos=[
 "https://cdn.rapidfile.cc/XoIS5tzlFp/video5.mp4"
 ];
 
-// أضف روابط فيديوهات الأنمي والأفلام والقصص هنا
 const animeVideos=[];
 const movieVideos=[];
 const storyVideos=[];
@@ -279,7 +277,7 @@ async function showProfile(userId=currentUser?.id){
  if(!userId){showAuth();return}
 
  const ownProfile=currentUser&&userId===currentUser.id;
- const profile=ownProfile?await getProfile(userId):await getProfile(userId);
+ const profile=await getProfile(userId);
 
  if(!profile){
   openModal();
@@ -319,7 +317,7 @@ async function showProfile(userId=currentUser?.id){
 
  const heading=document.createElement("h3");
  heading.style.marginTop="18px";
- heading.textContent="فيديوهات "+(ownProfile?"ي":"");
+ heading.textContent="فيديوهات "+(ownProfile?"ي":"المستخدم");
  panelContent.appendChild(heading);
 
  const grid=document.createElement("div");
@@ -482,8 +480,7 @@ function setupViewTracking(video,item,countElement){
 
    if(countElement)countElement.textContent="👁️ "+total+" مشاهدة";
 
-   const viewerItem=viewer.dataset.videoId===item.id;
-   if(viewerItem){
+   if(viewer.dataset.videoId===item.id){
     document.getElementById("viewerViews").textContent=
      "👁️ "+total+" مشاهدة";
    }
@@ -576,17 +573,14 @@ function createCard(url,description="",category="all",item=null){
  const desc=document.createElement("p");
  desc.textContent=description;
 
- const count=document.createElement("span");
- count.className="view-count";
- count.textContent=item?.id?
-  "👁️ "+(item.view_count||0)+" مشاهدة":"";
-
- info.append(owner,desc,count);
+ // لا نعرض عدد المشاهدات في قائمة لك
+ info.append(owner,desc);
  card.append(video,button,info);
  card.classList.add("paused");
 
+ // يستمر احتساب المشاهدات في قائمة لك بدون عرض الرقم
  if(item?.id){
-  setupViewTracking(video,item,count);
+  setupViewTracking(video,item,null);
  }
 
  if(item?.id&&currentUser&&item.user_id===currentUser.id){
