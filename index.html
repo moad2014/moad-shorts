@@ -28,23 +28,12 @@ header{position:fixed;top:0;width:100%;height:60px;z-index:1000;display:flex;ali
 .owner-name{font-weight:bold;pointer-events:auto;cursor:pointer;display:inline-flex;align-items:center}
 .verified-badge{display:inline-flex;align-items:center;justify-content:center;width:19px;height:19px;border-radius:50%;background:#1688ff;color:white;font-size:13px;font-weight:bold;margin-right:6px;vertical-align:middle;flex-shrink:0;text-shadow:none}
 .delete-button{position:absolute;bottom:125px;left:12px;z-index:100;background:#d9233e;color:white;border:0;border-radius:20px;padding:6px 10px;font-size:11px;font-weight:bold}
-
-/* أزرار الإعجاب والتعليقات */
-.social-actions{
- position:absolute;left:12px;bottom:170px;z-index:150;
- display:flex;flex-direction:column;gap:20px;align-items:center
-}
-.social-btn{
- border:0;background:transparent;color:white;
- display:flex;flex-direction:column;align-items:center;
- gap:5px;font-size:25px;cursor:pointer;
- text-shadow:0 1px 5px #000;
- min-width:48px
-}
-.social-btn span{font-size:13px;font-weight:bold}
+.social-actions{position:absolute;left:12px;bottom:170px;z-index:150;display:flex;flex-direction:column;gap:20px;align-items:center}
+.social-btn,.social-view-count{border:0;background:transparent;color:white;display:flex;flex-direction:column;align-items:center;gap:5px;font-size:25px;text-shadow:0 1px 5px #000;min-width:48px}
+.social-btn{cursor:pointer}
+.social-btn span,.social-view-count span{font-size:13px;font-weight:bold}
 .social-btn.liked{color:#fe2c55}
 .social-btn:disabled{opacity:.6}
-
 .empty{height:100vh;height:100dvh;display:flex;justify-content:center;align-items:center;text-align:center;color:#aaa;font-size:19px;scroll-snap-align:start;padding:20px}
 #modal{display:none;position:fixed;inset:0;z-index:5000;background:#000e;align-items:center;justify-content:center;padding:15px}
 .panel{background:#191919;border:1px solid #444;border-radius:18px;padding:20px;width:100%;max-width:420px;max-height:90dvh;overflow:auto}
@@ -67,14 +56,14 @@ header{position:fixed;top:0;width:100%;height:60px;z-index:1000;display:flex;ali
 #closeViewer{position:absolute;top:18px;right:18px;background:#333;color:white;border:0;border-radius:50%;width:42px;height:42px;font-size:27px;z-index:2}
 #viewerViews{font-size:15px;margin-top:12px;color:white}
 #viewerDescription{font-size:14px;color:#ccc;margin-top:8px;text-align:center;max-width:90%;overflow-wrap:anywhere}
-
-/* نافذة التعليقات */
 .comments-list{display:flex;flex-direction:column;gap:15px;margin:15px 0;max-height:45dvh;overflow-y:auto}
 .comment-item{display:flex;gap:10px;align-items:flex-start}
-.comment-avatar{width:38px;height:38px;flex-shrink:0;border-radius:50%;object-fit:cover;background:#333}
-.comment-avatar-fallback{width:38px;height:38px;flex-shrink:0;border-radius:50%;background:#333;display:flex;align-items:center;justify-content:center}
+.comment-avatar,.comment-avatar-fallback{width:38px;height:38px;flex-shrink:0;border-radius:50%;background:#333}
+.comment-avatar{object-fit:cover}
+.comment-avatar-fallback{display:flex;align-items:center;justify-content:center}
 .comment-content{flex:1;min-width:0}
-.comment-username{font-size:12px;color:#aaa;margin-bottom:5px;font-weight:bold}
+.comment-username-row{display:flex;align-items:center;gap:4px;margin-bottom:5px}
+.comment-username-btn{border:0;background:transparent;color:#aaa;font-size:12px;font-weight:bold;cursor:pointer;padding:0}
 .comment-text{font-size:14px;color:white;overflow-wrap:anywhere;line-height:1.5}
 .delete-comment{border:0;background:transparent;color:#ff667d;font-size:12px;padding:5px}
 .comment-form{display:flex;gap:8px;margin-top:12px}
@@ -85,12 +74,12 @@ header{position:fixed;top:0;width:100%;height:60px;z-index:1000;display:flex;ali
 
 <body>
 <header>
-  <div class="tabs">
-    <div class="tab active" data-tab="all">لك</div>
-    <div class="tab" data-tab="anime">أنمي</div>
-    <div class="tab" data-tab="movies">أفلام</div>
-    <div class="tab" data-tab="stories">قصص</div>
-  </div>
+ <div class="tabs">
+  <div class="tab active" data-tab="all">لك</div>
+  <div class="tab" data-tab="anime">أنمي</div>
+  <div class="tab" data-tab="movies">أفلام</div>
+  <div class="tab" data-tab="stories">قصص</div>
+ </div>
 </header>
 
 <button id="accountButton">👤</button>
@@ -99,21 +88,20 @@ header{position:fixed;top:0;width:100%;height:60px;z-index:1000;display:flex;ali
 
 <input id="fileInput" type="file" accept="video/mp4,video/webm,video/quicktime">
 <input id="avatarInput" type="file" accept="image/*">
-
 <main id="feed"></main>
 
 <div id="modal">
-  <div class="panel">
-    <button class="close" id="closeModal">×</button>
-    <div id="panelContent"></div>
-  </div>
+ <div class="panel">
+  <button class="close" id="closeModal">×</button>
+  <div id="panelContent"></div>
+ </div>
 </div>
 
 <div id="viewer">
-  <button id="closeViewer">×</button>
-  <video id="viewerVideo" controls playsinline></video>
-  <div id="viewerViews">👁️ 0 مشاهدة</div>
-  <div id="viewerDescription"></div>
+ <button id="closeViewer">×</button>
+ <video id="viewerVideo" controls playsinline></video>
+ <div id="viewerViews">👁️ 0 مشاهدة</div>
+ <div id="viewerDescription"></div>
 </div>
 
 <script>
@@ -142,11 +130,11 @@ let observer=null;
 let viewedThisPage=new Set();
 
 const oldVideos=[
-"https://raw.githubusercontent.com/moad2014/moad-shorts/main/2026-10-21-131624724.mp4",
-"https://raw.githubusercontent.com/moad2014/moad-shorts/main/video2.mp4",
-"https://raw.githubusercontent.com/moad2014/moad-shorts/main/video4.mp4",
-"https://cdn.rapidfile.cc/GTq7lpRHhs/video3.mp4",
-"https://cdn.rapidfile.cc/XoIS5tzlFp/video5.mp4"
+ "https://raw.githubusercontent.com/moad2014/moad-shorts/main/2026-10-21-131624724.mp4",
+ "https://raw.githubusercontent.com/moad2014/moad-shorts/main/video2.mp4",
+ "https://raw.githubusercontent.com/moad2014/moad-shorts/main/video4.mp4",
+ "https://cdn.rapidfile.cc/GTq7lpRHhs/video3.mp4",
+ "https://cdn.rapidfile.cc/XoIS5tzlFp/video5.mp4"
 ];
 
 const animeVideos=[];
@@ -156,9 +144,7 @@ const storyVideos=[];
 function openModal(){modal.style.display="flex"}
 function closeModal(){modal.style.display="none"}
 document.getElementById("closeModal").onclick=closeModal;
-modal.addEventListener("click",e=>{
- if(e.target===modal)closeModal();
-});
+modal.addEventListener("click",e=>{if(e.target===modal)closeModal()});
 
 function showMessage(message){
  const status=document.getElementById("status");
@@ -172,9 +158,7 @@ function updateAvatarButton(){
   img.src=currentProfile.avatar_url;
   img.onerror=()=>accountButton.textContent="👤";
   accountButton.appendChild(img);
- }else{
-  accountButton.textContent="👤";
- }
+ }else accountButton.textContent="👤";
 }
 
 async function getProfile(userId){
@@ -226,17 +210,14 @@ function showAuth(){
    await updateUser(data.session.user);
    showMessage("تم إنشاء الحساب بنجاح!");
    setTimeout(closeModal,1200);
-  }else{
-   showMessage("تم إنشاء الحساب. افتح بريدك واضغط رابط التأكيد، وبعدها سجل دخولك.");
-  }
+  }else showMessage("تم إنشاء الحساب. افتح بريدك واضغط رابط التأكيد، وبعدها سجل دخولك.");
  };
 }
 
 function daysUntilUsernameChange(profile){
  if(!profile?.username||!profile.username_changed_at)return 0;
  const changed=new Date(profile.username_changed_at).getTime();
- const sevenDays=7*24*60*60*1000;
- const remaining=sevenDays-(Date.now()-changed);
+ const remaining=7*24*60*60*1000-(Date.now()-changed);
  return Math.max(0,Math.ceil(remaining/(24*60*60*1000)));
 }
 
@@ -271,28 +252,21 @@ function makeProfileHeader(profile){
  name.style.alignItems="center";
  name.style.justifyContent="center";
  name.textContent=profile?.username?"@"+profile.username:"مستخدم MOAD SHORTS";
- addVerifiedBadge(name,profile?.is_verified);
+ addVerifiedBadge(name,profile?.is_verified===true);
  wrapper.appendChild(name);
  return wrapper;
 }
 
 async function loadProfileVideos(userId,container){
  container.innerHTML="<p>جاري تحميل الفيديوهات...</p>";
-
  const {data,error}=await db.from("videos")
   .select("id,user_id,video_url,description,view_count,created_at")
-  .eq("user_id",userId)
-  .order("created_at",{ascending:false});
+  .eq("user_id",userId).order("created_at",{ascending:false});
 
- if(error){
-  container.innerHTML="<p>تعذر تحميل الفيديوهات</p>";
-  console.error(error);
-  return;
- }
-
+ if(error){container.innerHTML="<p>تعذر تحميل الفيديوهات</p>";console.error(error);return}
  container.innerHTML="";
 
- if(!data||data.length===0){
+ if(!data?.length){
   container.innerHTML="<p>لم ينشر هذا المستخدم أي فيديو حتى الآن</p>";
   return;
  }
@@ -300,16 +274,13 @@ async function loadProfileVideos(userId,container){
  data.forEach(item=>{
   const tile=document.createElement("button");
   tile.className="profile-video-item";
-
   const video=document.createElement("video");
   video.src=item.video_url;
   video.preload="metadata";
   video.muted=true;
   video.playsInline=true;
-
   const count=document.createElement("span");
   count.textContent="👁️ "+(item.view_count||0)+" مشاهدة";
-
   tile.append(video,count);
   tile.onclick=()=>openVideoViewer(item);
   container.appendChild(tile);
@@ -318,7 +289,6 @@ async function loadProfileVideos(userId,container){
 
 async function showProfile(userId=currentUser?.id){
  if(!userId){showAuth();return}
-
  const ownProfile=currentUser&&userId===currentUser.id;
  const profile=await getProfile(userId);
 
@@ -328,11 +298,7 @@ async function showProfile(userId=currentUser?.id){
   return;
  }
 
- if(ownProfile){
-  currentProfile=profile;
-  updateAvatarButton();
- }
-
+ if(ownProfile){currentProfile=profile;updateAvatarButton()}
  openModal();
  panelContent.innerHTML="";
  panelContent.appendChild(makeProfileHeader(profile));
@@ -343,16 +309,13 @@ async function showProfile(userId=currentUser?.id){
    <button class="action secondary" id="changeAvatar">تغيير صورة الحساب</button>
    <input id="newUsername" maxlength="24" placeholder="اسم المستخدم">
    <button class="action" id="saveProfile">حفظ الملف الشخصي</button>
-   <p class="note" id="usernameNote"></p>
-  `;
+   <p class="note" id="usernameNote"></p>`;
   panelContent.appendChild(controls);
-
   document.getElementById("newUsername").value=profile.username||"";
   const days=daysUntilUsernameChange(profile);
-  document.getElementById("usernameNote").textContent=
-   days>0?`يمكنك تغيير اسم المستخدم بعد ${days} يوم.`:
+  document.getElementById("usernameNote").textContent=days>0?
+   `يمكنك تغيير اسم المستخدم بعد ${days} يوم.`:
    "يمكنك اختيار اسم مستخدم الآن. تغيير الاسم بعد ذلك مرة كل 7 أيام.";
-
   document.getElementById("changeAvatar").onclick=()=>avatarInput.click();
   document.getElementById("saveProfile").onclick=saveProfile;
  }
@@ -365,7 +328,6 @@ async function showProfile(userId=currentUser?.id){
  const grid=document.createElement("div");
  grid.className="profile-videos";
  panelContent.appendChild(grid);
-
  await loadProfileVideos(userId,grid);
 
  if(ownProfile){
@@ -401,10 +363,8 @@ async function saveProfile(){
  button.disabled=false;
 
  if(error){
-  if(error.code==="23505")
-   return showMessage("اسم المستخدم مستخدم من شخص آخر. اختار اسماً مختلفاً.");
-  if(error.message.toLowerCase().includes("7 days")||
-     error.message.toLowerCase().includes("seven"))
+  if(error.code==="23505")return showMessage("اسم المستخدم مستخدم من شخص آخر. اختار اسماً مختلفاً.");
+  if(error.message.toLowerCase().includes("7 days")||error.message.toLowerCase().includes("seven"))
    return showMessage("لا يمكنك تغيير اسم المستخدم إلا مرة كل 7 أيام.");
   return showMessage("حدث خطأ: "+error.message);
  }
@@ -418,12 +378,8 @@ async function saveProfile(){
 avatarInput.onchange=async()=>{
  const file=avatarInput.files[0];
  if(!file)return;
- if(!file.type.startsWith("image/")){
-  showMessage("اختار صورة فقط");avatarInput.value="";return;
- }
- if(file.size>3*1024*1024){
-  showMessage("حجم الصورة أكبر من 3 MB");avatarInput.value="";return;
- }
+ if(!file.type.startsWith("image/")){showMessage("اختار صورة فقط");avatarInput.value="";return}
+ if(file.size>3*1024*1024){showMessage("حجم الصورة أكبر من 3 MB");avatarInput.value="";return}
 
  showMessage("جاري رفع صورة الحساب...");
  const ext=(file.name.split(".").pop()||"jpg").toLowerCase();
@@ -432,20 +388,13 @@ avatarInput.onchange=async()=>{
  const {error:uploadError}=await db.storage.from("avatars")
   .upload(path,file,{contentType:file.type,upsert:false});
 
- if(uploadError){
-  showMessage("تعذر رفع الصورة: "+uploadError.message);
-  avatarInput.value="";
-  return;
- }
+ if(uploadError){showMessage("تعذر رفع الصورة: "+uploadError.message);avatarInput.value="";return}
 
  const {data:urlData}=db.storage.from("avatars").getPublicUrl(path);
  const {error:updateError}=await db.from("profiles")
   .update({avatar_url:urlData.publicUrl}).eq("id",currentUser.id);
 
- if(updateError){
-  showMessage("تم رفع الصورة لكن تعذر حفظها: "+updateError.message);
-  return;
- }
+ if(updateError){showMessage("تم رفع الصورة لكن تعذر حفظها: "+updateError.message);return}
 
  currentProfile=await getProfile(currentUser.id);
  updateAvatarButton();
@@ -484,30 +433,29 @@ function playVideo(video){
  video.play().then(()=>{
   video.closest(".video-card").classList.remove("paused");
   activeVideo=video;
- }).catch(()=>{
-  video.closest(".video-card").classList.add("paused");
- });
+ }).catch(()=>video.closest(".video-card").classList.add("paused"));
 }
 
+/* نظام المشاهدات */
 function setupViewTracking(video,item,countElement){
  if(!item?.id)return;
+
+ if(countElement)countElement.textContent=item.view_count||0;
 
  let timer=null;
  let sent=false;
 
  video.addEventListener("playing",()=>{
   if(!currentUser||sent||viewedThisPage.has(item.id))return;
-
   clearTimeout(timer);
+
   timer=setTimeout(async()=>{
    if(!currentUser||video.paused||video.ended)return;
 
    sent=true;
    viewedThisPage.add(item.id);
 
-   const {data,error}=await db.rpc("increment_video_views",{
-    video_id:item.id
-   });
+   const {data,error}=await db.rpc("increment_video_views",{video_id:item.id});
 
    if(error){
     console.error("View count error:",error);
@@ -516,14 +464,19 @@ function setupViewTracking(video,item,countElement){
     return;
    }
 
-   const total=Number(data)||0;
-   item.view_count=total;
+   const total=Number(data);
+   if(!Number.isFinite(total)){
+    console.error("Invalid view count returned:",data);
+    sent=false;
+    viewedThisPage.delete(item.id);
+    return;
+   }
 
-   if(countElement)countElement.textContent="👁️ "+total+" مشاهدة";
+   item.view_count=total;
+   if(countElement)countElement.textContent=total;
 
    if(viewer.dataset.videoId===item.id){
-    document.getElementById("viewerViews").textContent=
-     "👁️ "+total+" مشاهدة";
+    document.getElementById("viewerViews").textContent="👁️ "+total+" مشاهدة";
    }
   },2000);
  });
@@ -532,144 +485,87 @@ function setupViewTracking(video,item,countElement){
  video.addEventListener("ended",()=>clearTimeout(timer));
 }
 
-/* تحميل عدد الإعجابات والتعليقات */
 async function getSocialCounts(videoId){
  const [likesResult,commentsResult]=await Promise.all([
-  db.from("video_likes").select("id",{count:"exact",head:true})
-   .eq("video_id",videoId),
-  db.from("video_comments").select("id",{count:"exact",head:true})
-   .eq("video_id",videoId)
+  db.from("video_likes").select("id",{count:"exact",head:true}).eq("video_id",videoId),
+  db.from("video_comments").select("id",{count:"exact",head:true}).eq("video_id",videoId)
  ]);
-
  if(likesResult.error)console.error(likesResult.error);
  if(commentsResult.error)console.error(commentsResult.error);
-
- return {
-  likes:likesResult.count||0,
-  comments:commentsResult.count||0
- };
+ return {likes:likesResult.count||0,comments:commentsResult.count||0};
 }
 
-/* معرفة هل المستخدم أعجب بالفيديو */
 async function hasUserLiked(videoId){
  if(!currentUser)return false;
-
- const {data,error}=await db.from("video_likes")
-  .select("id")
-  .eq("video_id",videoId)
-  .eq("user_id",currentUser.id)
-  .maybeSingle();
-
- if(error){
-  console.error(error);
-  return false;
- }
+ const {data,error}=await db.from("video_likes").select("id")
+  .eq("video_id",videoId).eq("user_id",currentUser.id).maybeSingle();
+ if(error){console.error(error);return false}
  return !!data;
 }
 
-/* تحديث أزرار التفاعل */
 async function updateSocialButtons(item,likeButton,commentButton){
  if(!item?.id)return;
-
- const [counts,liked]=await Promise.all([
-  getSocialCounts(item.id),
-  hasUserLiked(item.id)
- ]);
-
+ const [counts,liked]=await Promise.all([getSocialCounts(item.id),hasUserLiked(item.id)]);
  likeButton.innerHTML="❤️<span>"+counts.likes+"</span>";
  likeButton.classList.toggle("liked",liked);
  commentButton.innerHTML="💬<span>"+counts.comments+"</span>";
 }
 
-/* الإعجاب وإلغاء الإعجاب */
 async function toggleLike(item,button,commentButton){
- if(!currentUser){
-  showAuth();
-  return;
- }
-
+ if(!currentUser){showAuth();return}
  button.disabled=true;
 
  const {data:existing,error:findError}=await db.from("video_likes")
-  .select("id")
-  .eq("video_id",item.id)
-  .eq("user_id",currentUser.id)
-  .maybeSingle();
+  .select("id").eq("video_id",item.id).eq("user_id",currentUser.id).maybeSingle();
 
- if(findError){
-  alert("تعذر التحقق من الإعجاب: "+findError.message);
-  button.disabled=false;
-  return;
- }
+ if(findError){alert("تعذر التحقق من الإعجاب: "+findError.message);button.disabled=false;return}
 
  let error=null;
-
  if(existing){
-  const result=await db.from("video_likes")
-   .delete()
-   .eq("id",existing.id)
-   .eq("user_id",currentUser.id);
+  const result=await db.from("video_likes").delete()
+   .eq("id",existing.id).eq("user_id",currentUser.id);
   error=result.error;
  }else{
-  const result=await db.from("video_likes").insert({
-   video_id:item.id,
-   user_id:currentUser.id
-  });
+  const result=await db.from("video_likes").insert({video_id:item.id,user_id:currentUser.id});
   error=result.error;
  }
 
  if(error)alert("تعذر تنفيذ الإعجاب: "+error.message);
-
  await updateSocialButtons(item,button,commentButton);
  button.disabled=false;
 }
 
-/* فتح التعليقات */
+/* التعليقات مع التوثيق وفتح الحساب */
 async function showComments(item,likeButton,commentButton){
  if(!item?.id)return;
-
- if(!currentUser){
-  showAuth();
-  return;
- }
+ if(!currentUser){showAuth();return}
 
  openModal();
  panelContent.innerHTML=`
   <h2>التعليقات</h2>
-  <div id="commentsList" class="comments-list">
-   <p class="note">جاري تحميل التعليقات...</p>
-  </div>
+  <div id="commentsList" class="comments-list"><p class="note">جاري تحميل التعليقات...</p></div>
   <div class="comment-form">
    <input id="newComment" maxlength="500" placeholder="اكتب تعليقك...">
    <button id="sendComment">إرسال</button>
   </div>
-  <p id="status"></p>
- `;
+  <p id="status"></p>`;
 
  const list=document.getElementById("commentsList");
-
  const {data:comments,error}=await db.from("video_comments")
   .select("id,user_id,comment,created_at")
-  .eq("video_id",item.id)
-  .order("created_at",{ascending:true});
+  .eq("video_id",item.id).order("created_at",{ascending:true});
 
- if(error){
-  list.innerHTML="<p>تعذر تحميل التعليقات: "+error.message+"</p>";
-  return;
- }
-
+ if(error){list.textContent="تعذر تحميل التعليقات: "+error.message;return}
  list.innerHTML="";
 
- if(!comments||comments.length===0){
+ if(!comments?.length){
   list.innerHTML="<p class='note'>لا توجد تعليقات حتى الآن. كن أول من يعلّق!</p>";
  }else{
   const userIds=[...new Set(comments.map(c=>c.user_id))];
-
   const {data:profiles,error:profilesError}=await db.from("profiles")
-   .select("id,username,avatar_url")
-   .in("id",userIds);
+   .select("id,username,avatar_url,is_verified").in("id",userIds);
 
-  if(profilesError)console.error(profilesError);
+  if(profilesError)console.error("Comment profiles error:",profilesError);
 
   const profileMap={};
   (profiles||[]).forEach(p=>profileMap[p.id]=p);
@@ -700,15 +596,25 @@ async function showComments(item,likeButton,commentButton){
    const content=document.createElement("div");
    content.className="comment-content";
 
-   const username=document.createElement("div");
-   username.className="comment-username";
+   const usernameRow=document.createElement("div");
+   usernameRow.className="comment-username-row";
+
+   const username=document.createElement("button");
+   username.className="comment-username-btn";
    username.textContent=profile.username?"@"+profile.username:"مستخدم";
+   addVerifiedBadge(username,profile.is_verified===true);
+
+   username.onclick=e=>{
+    e.stopPropagation();
+    showProfile(comment.user_id);
+   };
 
    const text=document.createElement("div");
    text.className="comment-text";
    text.textContent=comment.comment;
 
-   content.append(username,text);
+   usernameRow.appendChild(username);
+   content.append(usernameRow,text);
    row.appendChild(content);
 
    if(currentUser&&comment.user_id===currentUser.id){
@@ -717,23 +623,15 @@ async function showComments(item,likeButton,commentButton){
     del.textContent="حذف";
     del.onclick=async()=>{
      if(!confirm("هل تريد حذف تعليقك؟"))return;
-
      del.disabled=true;
-     const {error:deleteError}=await db.from("video_comments")
-      .delete().eq("id",comment.id).eq("user_id",currentUser.id);
-
-     if(deleteError){
-      alert("تعذر حذف التعليق: "+deleteError.message);
-      del.disabled=false;
-      return;
-     }
-
+     const {error:deleteError}=await db.from("video_comments").delete()
+      .eq("id",comment.id).eq("user_id",currentUser.id);
+     if(deleteError){alert("تعذر حذف التعليق: "+deleteError.message);del.disabled=false;return}
      await showComments(item,likeButton,commentButton);
      await updateSocialButtons(item,likeButton,commentButton);
     };
     row.appendChild(del);
    }
-
    list.appendChild(row);
   });
  }
@@ -741,7 +639,6 @@ async function showComments(item,likeButton,commentButton){
  document.getElementById("sendComment").onclick=async()=>{
   const input=document.getElementById("newComment");
   const comment=input.value.trim();
-
   if(!comment)return showMessage("اكتب تعليقاً أولاً");
   if(comment.length>500)return showMessage("التعليق طويل جداً");
 
@@ -750,9 +647,7 @@ async function showComments(item,likeButton,commentButton){
   showMessage("جاري إرسال التعليق...");
 
   const {error:insertError}=await db.from("video_comments").insert({
-   video_id:item.id,
-   user_id:currentUser.id,
-   comment:comment
+   video_id:item.id,user_id:currentUser.id,comment
   });
 
   if(insertError){
@@ -768,7 +663,6 @@ async function showComments(item,likeButton,commentButton){
 
 function openVideoViewer(item){
  if(!item?.video_url)return;
-
  stopAllVideos();
  activeVideo=null;
 
@@ -778,18 +672,10 @@ function openVideoViewer(item){
  viewerVideo.src=item.video_url;
  viewerVideo.load();
 
- document.getElementById("viewerViews").textContent=
-  "👁️ "+(item.view_count||0)+" مشاهدة";
+ document.getElementById("viewerViews").textContent="👁️ "+(item.view_count||0)+" مشاهدة";
+ document.getElementById("viewerDescription").textContent=item.description||"";
 
- document.getElementById("viewerDescription").textContent=
-  item.description||"";
-
- setupViewTracking(
-  viewerVideo,
-  item,
-  document.getElementById("viewerViews")
- );
-
+ setupViewTracking(viewerVideo,item,document.getElementById("viewerViews"));
  viewerVideo.play().catch(()=>{});
 }
 
@@ -802,9 +688,7 @@ function closeVideoViewer(){
 }
 
 document.getElementById("closeViewer").onclick=closeVideoViewer;
-viewer.addEventListener("click",e=>{
- if(e.target===viewer)closeVideoViewer();
-});
+viewer.addEventListener("click",e=>{if(e.target===viewer)closeVideoViewer()});
 
 function createCard(url,description="",category="all",item=null){
  const card=document.createElement("section");
@@ -833,30 +717,20 @@ function createCard(url,description="",category="all",item=null){
 
  if(item?.username){
   owner.textContent="@"+item.username;
-  addVerifiedBadge(owner,item.is_verified);
-  owner.onclick=e=>{
-   e.stopPropagation();
-   showProfile(item.user_id);
-  };
+  addVerifiedBadge(owner,item.is_verified===true);
+  owner.onclick=e=>{e.stopPropagation();showProfile(item.user_id)};
  }else if(item?.user_id){
   owner.textContent="عرض الملف الشخصي";
-  owner.onclick=e=>{
-   e.stopPropagation();
-   showProfile(item.user_id);
-  };
+  owner.onclick=e=>{e.stopPropagation();showProfile(item.user_id)};
  }
 
  const desc=document.createElement("p");
  desc.textContent=description;
-
  info.append(owner,desc);
  card.append(video,button,info);
  card.classList.add("paused");
 
  if(item?.id){
-  setupViewTracking(video,item,null);
-
-  /* إضافة أزرار الإعجاب والتعليقات للفيديوهات المنشورة */
   const social=document.createElement("div");
   social.className="social-actions";
 
@@ -868,19 +742,17 @@ function createCard(url,description="",category="all",item=null){
   commentButton.className="social-btn";
   commentButton.innerHTML="💬<span>0</span>";
 
-  likeButton.onclick=e=>{
-   e.stopPropagation();
-   toggleLike(item,likeButton,commentButton);
-  };
+  const viewCount=document.createElement("div");
+  viewCount.className="social-view-count";
+  viewCount.innerHTML="👁️<span>"+(item.view_count||0)+"</span>";
 
-  commentButton.onclick=e=>{
-   e.stopPropagation();
-   showComments(item,likeButton,commentButton);
-  };
+  likeButton.onclick=e=>{e.stopPropagation();toggleLike(item,likeButton,commentButton)};
+  commentButton.onclick=e=>{e.stopPropagation();showComments(item,likeButton,commentButton)};
 
-  social.append(likeButton,commentButton);
+  social.append(likeButton,commentButton,viewCount);
   card.appendChild(social);
 
+  setupViewTracking(video,item,viewCount.querySelector("span"));
   updateSocialButtons(item,likeButton,commentButton);
  }
 
@@ -888,11 +760,9 @@ function createCard(url,description="",category="all",item=null){
   const del=document.createElement("button");
   del.className="delete-button";
   del.textContent="حذف الفيديو";
-
-  del.onclick=async(e)=>{
+  del.onclick=async e=>{
    e.stopPropagation();
    if(!confirm("هل أنت متأكد من حذف هذا الفيديو؟"))return;
-
    del.disabled=true;
    del.textContent="جاري الحذف...";
 
@@ -908,26 +778,20 @@ function createCard(url,description="",category="all",item=null){
 
    const path=getVideoStoragePath(url);
    if(path)await db.storage.from("videos").remove([path]);
-
    await loadVideos();
   };
-
   card.appendChild(del);
  }
 
  card.addEventListener("click",event=>{
   if(event.target===button||event.target===video){
    if(video.paused)playVideo(video);
-   else{
-    video.pause();
-    card.classList.add("paused");
-   }
+   else{video.pause();card.classList.add("paused")}
   }
  });
 
  video.addEventListener("ended",()=>card.classList.add("paused"));
  video.addEventListener("error",()=>card.classList.add("paused"));
-
  return card;
 }
 
@@ -946,57 +810,40 @@ async function loadVideos(){
  feed.innerHTML="";
 
  let cards=[];
-
- oldVideos.forEach(url=>{
-  cards.push(createCard(url,"","all"));
- });
+ oldVideos.forEach(url=>cards.push(createCard(url,"","all")));
 
  const {data,error}=await db.from("videos")
   .select("id,user_id,video_url,description,created_at,view_count")
   .order("created_at",{ascending:false});
 
- if(error){
-  console.error(error);
- }else if(data){
+ if(error)console.error(error);
+ else if(data){
   const userIds=[...new Set(data.map(v=>v.user_id).filter(Boolean))];
   let profiles={};
 
   if(userIds.length){
    const result=await db.from("profiles")
     .select("id,username,is_verified").in("id",userIds);
-
-   if(!result.error&&result.data){
-    result.data.forEach(p=>profiles[p.id]=p);
-   }
+   if(!result.error&&result.data)result.data.forEach(p=>profiles[p.id]=p);
   }
 
   data.forEach(item=>{
    const profile=profiles[item.user_id]||{};
-   cards.push(createCard(
-    item.video_url,
-    item.description||"",
-    "all",
-    {
-     ...item,
-     username:profile.username||"",
-     is_verified:profile.is_verified===true
-    }
-   ));
+   cards.push(createCard(item.video_url,item.description||"","all",{
+    ...item,
+    view_count:Number(item.view_count)||0,
+    username:profile.username||"",
+    is_verified:profile.is_verified===true
+   }));
   });
  }
 
  shuffle(cards);
  cards.forEach(card=>feed.appendChild(card));
 
- animeVideos.forEach(v=>feed.appendChild(
-  createCard(v.url,v.description||"","anime")
- ));
- movieVideos.forEach(v=>feed.appendChild(
-  createCard(v.url,v.description||"","movies")
- ));
- storyVideos.forEach(v=>feed.appendChild(
-  createCard(v.url,v.description||"","stories")
- ));
+ animeVideos.forEach(v=>feed.appendChild(createCard(v.url,v.description||"","anime")));
+ movieVideos.forEach(v=>feed.appendChild(createCard(v.url,v.description||"","movies")));
+ storyVideos.forEach(v=>feed.appendChild(createCard(v.url,v.description||"","stories")));
 
  if(observer)observer.disconnect();
 
@@ -1010,10 +857,7 @@ async function loadVideos(){
   }
  },{threshold:[0,0.7,1]});
 
- document.querySelectorAll(".video-card").forEach(card=>{
-  observer.observe(card);
- });
-
+ document.querySelectorAll(".video-card").forEach(card=>observer.observe(card));
  applyTab(currentTab);
 }
 
@@ -1022,11 +866,9 @@ function applyTab(category){
  stopAllVideos();
  activeVideo=null;
  feed.scrollTop=0;
-
  document.querySelectorAll(".empty").forEach(item=>item.remove());
 
  let visibleCount=0;
-
  document.querySelectorAll(".video-card").forEach(card=>{
   const show=card.dataset.category===category;
   card.style.display=show?"flex":"none";
@@ -1036,14 +878,12 @@ function applyTab(category){
  if(visibleCount===0){
   const empty=document.createElement("div");
   empty.className="empty";
-
   const messages={
    all:"لا توجد فيديوهات حالياً",
    anime:"لا توجد فيديوهات أنمي حالياً",
    movies:"لا توجد فيديوهات أفلام حالياً",
    stories:"لا توجد قصص حالياً"
   };
-
   empty.textContent=messages[category];
   feed.appendChild(empty);
  }
@@ -1060,33 +900,19 @@ document.querySelectorAll(".tab").forEach(tab=>{
 soundButton.onclick=()=>{
  soundEnabled=!soundEnabled;
  if(activeVideo)activeVideo.muted=!soundEnabled;
- soundButton.textContent=soundEnabled?
-  "🔊 الصوت مفتوح":"🔇 الصوت مغلق";
+ soundButton.textContent=soundEnabled?"🔊 الصوت مفتوح":"🔇 الصوت مغلق";
 };
 
 uploadButton.onclick=()=>{
- if(currentTab!=="all"){
-  alert("النشر متاح في قسم لك فقط");
-  return;
- }
- if(!currentUser){
-  showAuth();
-  return;
- }
+ if(currentTab!=="all"){alert("النشر متاح في قسم لك فقط");return}
+ if(!currentUser){showAuth();return}
  fileInput.click();
 };
 
 function validateVideo(file){
  return new Promise((resolve,reject)=>{
-  if(!file.type.startsWith("video/")){
-   reject("الملف المختار مش فيديو");
-   return;
-  }
-
-  if(file.size>50*1024*1024){
-   reject("حجم الفيديو أكبر من 50 MB");
-   return;
-  }
+  if(!file.type.startsWith("video/")){reject("الملف المختار مش فيديو");return}
+  if(file.size>50*1024*1024){reject("حجم الفيديو أكبر من 50 MB");return}
 
   const video=document.createElement("video");
   video.preload="metadata";
@@ -1094,13 +920,9 @@ function validateVideo(file){
 
   video.onloadedmetadata=()=>{
    URL.revokeObjectURL(video.src);
-
-   if(!Number.isFinite(video.duration)||video.duration<=0)
-    reject("تعذر قراءة مدة الفيديو");
-   else if(video.duration>90)
-    reject("مدة الفيديو أطول من 90 ثانية");
-   else if(video.videoHeight<=video.videoWidth)
-    reject("لازم الفيديو يكون عمودي");
+   if(!Number.isFinite(video.duration)||video.duration<=0)reject("تعذر قراءة مدة الفيديو");
+   else if(video.duration>90)reject("مدة الفيديو أطول من 90 ثانية");
+   else if(video.videoHeight<=video.videoWidth)reject("لازم الفيديو يكون عمودي");
    else resolve(true);
   };
 
@@ -1108,7 +930,6 @@ function validateVideo(file){
    URL.revokeObjectURL(video.src);
    reject("تعذر قراءة الفيديو");
   };
-
   video.src=URL.createObjectURL(file);
  });
 }
@@ -1116,27 +937,13 @@ function validateVideo(file){
 fileInput.onchange=async()=>{
  const file=fileInput.files[0];
  if(!file)return;
-
- if(!currentUser){
-  fileInput.value="";
-  showAuth();
-  return;
- }
+ if(!currentUser){fileInput.value="";showAuth();return}
 
  openModal();
+ panelContent.innerHTML=`<h2>نشر فيديو</h2><textarea id="description" placeholder="اكتب وصف الفيديو (اختياري)"></textarea><p id="status">جاري فحص الفيديو...</p>`;
 
- panelContent.innerHTML=`
- <h2>نشر فيديو</h2>
- <textarea id="description" placeholder="اكتب وصف الفيديو (اختياري)"></textarea>
- <p id="status">جاري فحص الفيديو...</p>`;
-
- try{
-  await validateVideo(file);
- }catch(error){
-  showMessage(error);
-  fileInput.value="";
-  return;
- }
+ try{await validateVideo(file)}
+ catch(error){showMessage(error);fileInput.value="";return}
 
  panelContent.innerHTML=`
  <h2>نشر فيديو</h2>
@@ -1148,14 +955,12 @@ fileInput.onchange=async()=>{
  document.getElementById("publish").onclick=async()=>{
   const button=document.getElementById("publish");
   const description=document.getElementById("description").value.trim();
-
   button.disabled=true;
   showMessage("جاري رفع الفيديو... لا تغلق الصفحة");
 
   try{
    const {data:sessionData}=await db.auth.getSession();
    const user=sessionData.session?.user;
-
    if(!user)throw new Error("سجل دخولك من جديد");
 
    const ext=(file.name.split(".").pop()||"mp4").toLowerCase();
@@ -1163,15 +968,11 @@ fileInput.onchange=async()=>{
 
    const {error:uploadError}=await db.storage.from("videos")
     .upload(path,file,{contentType:file.type,upsert:false});
-
    if(uploadError)throw uploadError;
 
    const {data:urlData}=db.storage.from("videos").getPublicUrl(path);
-
    const {error:insertError}=await db.from("videos").insert({
-    user_id:user.id,
-    video_url:urlData.publicUrl,
-    description
+    user_id:user.id,video_url:urlData.publicUrl,description,view_count:0
    });
 
    if(insertError){
@@ -1185,11 +986,7 @@ fileInput.onchange=async()=>{
    setTimeout(async()=>{
     closeModal();
     currentTab="all";
-
-    document.querySelectorAll(".tab").forEach(t=>{
-     t.classList.toggle("active",t.dataset.tab==="all");
-    });
-
+    document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("active",t.dataset.tab==="all"));
     await loadVideos();
    },1000);
 
@@ -1201,7 +998,8 @@ fileInput.onchange=async()=>{
 };
 
 async function initialize(){
- const {data}=await db.auth.getSession();
+ const {data,error}=await db.auth.getSession();
+ if(error)console.error(error);
  await updateUser(data.session?.user||null);
  await loadVideos();
 }
