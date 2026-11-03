@@ -141,7 +141,6 @@ video {
 
 <main id="feed">
 
-  <!-- الفيديو الأول -->
   <section class="video-card">
     <video playsinline webkit-playsinline preload="metadata">
       <source src="https://raw.githubusercontent.com/moad2014/moad-shorts/main/2026-10-21-131624724.mp4" type="video/mp4">
@@ -149,7 +148,6 @@ video {
     <button class="play-button">▶</button>
   </section>
 
-  <!-- الفيديو الثاني -->
   <section class="video-card">
     <video playsinline webkit-playsinline preload="metadata">
       <source src="https://raw.githubusercontent.com/moad2014/moad-shorts/main/video2.mp4" type="video/mp4">
@@ -157,7 +155,6 @@ video {
     <button class="play-button">▶</button>
   </section>
 
-  <!-- الفيديو الثالث -->
   <section class="video-card">
     <video playsinline webkit-playsinline preload="metadata">
       <source src="https://raw.githubusercontent.com/moad2014/moad-shorts/main/video4.mp4" type="video/mp4">
@@ -165,9 +162,13 @@ video {
     <button class="play-button">▶</button>
   </section>
 
-  <!-- الفيديو الرابع من Rapidfile -->
   <section class="video-card">
-    <video playsinline webkit-playsinline preload="metadata">
+    <video
+      playsinline
+      webkit-playsinline
+      preload="auto"
+      crossorigin="anonymous"
+    >
       <source src="https://cdn.rapidfile.cc/GTq7lpRHhs/video3.mp4" type="video/mp4">
     </video>
     <button class="play-button">▶</button>
@@ -182,6 +183,7 @@ const tabs = document.querySelectorAll(".tab");
 
 let soundEnabled = false;
 let activeVideo = null;
+let observer = null;
 
 function stopAllVideos(except = null) {
   document.querySelectorAll(".video-card video").forEach(video => {
@@ -201,8 +203,9 @@ function playVideo(video) {
   video.play().then(() => {
     video.closest(".video-card").classList.remove("paused");
     activeVideo = video;
-  }).catch(() => {
+  }).catch(error => {
     video.closest(".video-card").classList.add("paused");
+    console.log("Video playback error:", error);
   });
 }
 
@@ -229,7 +232,7 @@ document.querySelectorAll(".video-card").forEach(card => {
 
   video.addEventListener("error", () => {
     card.classList.add("paused");
-    console.log("تعذر تحميل الفيديو:", video.currentSrc);
+    console.log("Video loading error:", video.currentSrc);
   });
 });
 
@@ -245,7 +248,7 @@ soundButton.addEventListener("click", () => {
     : "🔇 الصوت مغلق";
 });
 
-const observer = new IntersectionObserver(entries => {
+observer = new IntersectionObserver(entries => {
   const visible = entries
     .filter(entry => entry.isIntersecting)
     .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
