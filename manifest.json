@@ -1,0 +1,13 @@
+{
+  "background_color": "rgb(0, 0, 0)",
+  "dir": "ltr",
+  "display": "standalone",
+  "name": "MOAD SHORTS",
+  "orientation": "any",
+  "scope": "/",
+  "short_name": "MOAD",
+  "start_url": "/",
+  "theme_color": "#000000",
+  "id": "/MOAD-SHORTS/",
+  "description": "Watch and share short videos on MOAD SHORTS."
+}
