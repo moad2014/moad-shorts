@@ -71,6 +71,18 @@ header{position:fixed;top:0;width:100%;height:60px;z-index:1000;display:flex;ali
 .comment-form button{border:0;background:#fe2c55;color:white;border-radius:9px;padding:0 15px;font-weight:bold}
 
 #musicButton{position:fixed;top:122px;left:12px;z-index:2000;background:#222;color:white;border:1px solid #777;border-radius:22px;padding:9px 13px;font-size:13px;font-weight:bold}
+#musicPage{display:none;position:fixed;inset:0;z-index:6000;background:#080808;color:white;overflow-y:auto;padding:env(safe-area-inset-top) 14px 24px}
+.music-page-head{position:sticky;top:0;z-index:2;display:flex;align-items:center;justify-content:space-between;gap:10px;background:#080808;padding:12px 0 16px;border-bottom:1px solid #292929}
+.music-page-title{font-size:20px;font-weight:bold;flex:1;text-align:center}
+.music-page-btn{border:0;border-radius:12px;padding:11px 13px;font-weight:bold;color:white;background:#292929}
+#addMusicButton{background:#fe2c55;white-space:nowrap}
+#musicPageContent{max-width:650px;margin:18px auto}
+.music-track{display:flex;gap:9px;align-items:center;background:#202020;border:1px solid #333;padding:12px;margin:10px 0;border-radius:13px}
+.music-track-name{flex:1;min-width:0;overflow-wrap:anywhere;font-size:14px}
+.music-track button{width:auto;margin:0;padding:9px 12px}
+#musicPlayer{margin:14px 0}
+#musicPlayer audio{width:100%}
+
 </style>
 </head>
 <body>
@@ -86,6 +98,19 @@ header{position:fixed;top:0;width:100%;height:60px;z-index:1000;display:flex;ali
 <button id="soundButton">🔇 الصوت مغلق</button>
 <button id="musicButton">🎵 موسيقاي</button>
 <input id="musicInput" type="file" accept="audio/*" style="display:none">
+<section id="musicPage">
+ <div class="music-page-head">
+  <button class="music-page-btn" id="closeMusicPage">رجوع ✕</button>
+  <div class="music-page-title">🎵 موسيقاي</div>
+  <button class="music-page-btn" id="addMusicButton">＋ إضافة موسيقى</button>
+ </div>
+ <div id="musicPageContent">
+  <p class="note">مكتبتك الموسيقية الخاصة. الأغاني تظهر لحسابك فقط.</p>
+  <div id="musicPlayer"></div>
+  <div id="musicList"><p class="note">جاري التحميل...</p></div>
+  <p id="musicStatus" class="note"></p>
+ </div>
+</section>
 <button id="uploadButton">＋ نشر فيديو</button>
 <input id="fileInput" type="file" accept="video/mp4,video/webm,video/quicktime">
 <input id="avatarInput" type="file" accept="image/*">
@@ -421,47 +446,121 @@ avatarInput.onchange=async()=>{
 
 const musicButton=document.getElementById("musicButton");
 const musicInput=document.getElementById("musicInput");
+const musicPage=document.getElementById("musicPage");
 let personalAudio=null;
 musicButton.onclick=()=>showMyMusic();
+document.getElementById("closeMusicPage").onclick=()=>{
+ if(personalAudio){personalAudio.pause();personalAudio=null}
+ musicPage.style.display="none";
+};
+document.getElementById("addMusicButton").onclick=()=>musicInput.click();
+
+function musicMessage(message){
+ const status=document.getElementById("musicStatus");
+ if(status)status.textContent=message;
+}
 async function showMyMusic(){
  if(!currentUser){showAuth();return}
- openModal();
- panelContent.innerHTML='<h2>🎵 موسيقاي الخاصة</h2><p class="note">هذه الموسيقى خاصة بحسابك فقط.</p><input id="musicTitle" maxlength="80" placeholder="اسم المقطوعة (اختياري)"><button class="action" id="chooseMusic">＋ إضافة موسيقى من الهاتف</button><div id="musicPlayer"></div><div id="musicList"><p class="note">جاري التحميل...</p></div><p id="status"></p>';
- document.getElementById("chooseMusic").onclick=()=>musicInput.click();
+ stopAllVideos();
+ activeVideo=null;
+ closeModal();
+ musicPage.style.display="block";
  await loadMyMusic();
 }
 async function loadMyMusic(){
- const list=document.getElementById("musicList");if(!list)return;
- const {data,error}=await db.from("personal_music").select("id,title,file_path").eq("user_id",currentUser.id).order("created_at",{ascending:false});
+ const list=document.getElementById("musicList");
+ if(!list||!currentUser)return;
+ list.innerHTML="<p class='note'>جاري تحميل الموسيقى...</p>";
+ const {data,error}=await db.from("personal_music")
+  .select("id,title,file_path").eq("user_id",currentUser.id)
+  .order("created_at",{ascending:false});
  if(error){list.textContent="تعذر التحميل: "+error.message;return}
  list.innerHTML="";
- if(!data.length){list.textContent="ما ضفتش موسيقى لحد الآن.";return}
+ if(!data?.length){list.innerHTML="<p class='note'>ما ضفتش موسيقى لحد الآن. اضغط إضافة موسيقى للبدء.</p>";return}
  data.forEach(track=>{
-  const row=document.createElement("div");row.style.cssText="display:flex;gap:8px;align-items:center;background:#292929;padding:10px;margin:8px 0;border-radius:9px";
-  const name=document.createElement("span");name.textContent=track.title||"موسيقى";name.style.flex="1";
-  const play=document.createElement("button");play.textContent="▶";play.className="action";play.style.cssText="width:auto;margin:0;padding:8px 12px";
-  play.onclick=async()=>{const {data:s,error}=await db.storage.from("personal-music").createSignedUrl(track.file_path,3600);if(error){showMessage(error.message);return}if(personalAudio)personalAudio.pause();const area=document.getElementById("musicPlayer");area.innerHTML="";personalAudio=document.createElement("audio");personalAudio.controls=true;personalAudio.src=s.signedUrl;personalAudio.style.width="100%";area.appendChild(personalAudio);await personalAudio.play().catch(()=>{});};
-  const del=document.createElement("button");del.textContent="حذف";del.className="action secondary";del.style.cssText="width:auto;margin:0;padding:8px";
-  del.onclick=async()=>{if(!confirm("تحذف الموسيقى؟"))return;const {error:e}=await db.storage.from("personal-music").remove([track.file_path]);if(e){showMessage(e.message);return}const {error:d}=await db.from("personal_music").delete().eq("id",track.id).eq("user_id",currentUser.id);if(d){showMessage(d.message);return}await loadMyMusic();};
-  row.append(name,play,del);list.appendChild(row);
+  const row=document.createElement("div");
+  row.className="music-track";
+  const name=document.createElement("span");
+  name.className="music-track-name";
+  name.textContent=track.title||"موسيقى";
+  const play=document.createElement("button");
+  play.textContent="▶ تشغيل";
+  play.className="action";
+  play.onclick=async()=>{
+   const {data:s,error:e}=await db.storage.from("personal-music").createSignedUrl(track.file_path,3600);
+   if(e){musicMessage("تعذر تشغيل الملف: "+e.message);return}
+   if(personalAudio)personalAudio.pause();
+   const area=document.getElementById("musicPlayer");
+   area.innerHTML="";
+   personalAudio=document.createElement("audio");
+   personalAudio.controls=true;
+   personalAudio.src=s.signedUrl;
+   area.appendChild(personalAudio);
+   await personalAudio.play().catch(()=>{});
+   musicMessage("يتم تشغيل: "+(track.title||"موسيقى"));
+  };
+  const del=document.createElement("button");
+  del.textContent="حذف";
+  del.className="action secondary";
+  del.onclick=async()=>{
+   if(!confirm("تحذف الموسيقى؟"))return;
+   del.disabled=true;
+   const {error:e}=await db.storage.from("personal-music").remove([track.file_path]);
+   if(e){musicMessage("تعذر حذف الملف: "+e.message);del.disabled=false;return}
+   const {error:d}=await db.from("personal_music").delete()
+    .eq("id",track.id).eq("user_id",currentUser.id);
+   if(d){musicMessage("تعذر حذف سجل الموسيقى: "+d.message);del.disabled=false;return}
+   if(personalAudio){personalAudio.pause();personalAudio=null;document.getElementById("musicPlayer").innerHTML=""}
+   await loadMyMusic();
+   musicMessage("تم حذف الموسيقى");
+  };
+  row.append(name,play,del);
+  list.appendChild(row);
  });
 }
 musicInput.onchange=async()=>{
- const file=musicInput.files&&musicInput.files[0];if(!file)return;
+ const file=musicInput.files&&musicInput.files[0];
+ if(!file)return;
  if(!currentUser){musicInput.value="";showAuth();return}
- if(!file.type.startsWith("audio/")){showMessage("اختار ملف صوتي");musicInput.value="";return}
- if(file.size>20*1024*1024){showMessage("الحد الأقصى 20 MB");musicInput.value="";return}
- const title=document.getElementById("musicTitle")?.value.trim()||file.name.replace(/\.[^.]+$/,"");
- const btn=document.getElementById("chooseMusic");btn.disabled=true;showMessage("جاري رفع الموسيقى...");
+ if(!file.type.startsWith("audio/")){
+  musicMessage("اختار ملف صوتي فقط");
+  musicInput.value="";
+  return;
+ }
+ if(file.size>20*1024*1024){
+  musicMessage("الحد الأقصى لحجم الموسيقى 20 MB");
+  musicInput.value="";
+  return;
+ }
+ const button=document.getElementById("addMusicButton");
+ button.disabled=true;
+ musicMessage("جاري رفع الموسيقى وإضافتها...");
+ const title=file.name.replace(/\.[^.]+$/,"");
  const ext=(file.name.split(".").pop()||"mp3").toLowerCase().replace(/[^a-z0-9]/g,"");
  const path=currentUser.id+"/"+crypto.randomUUID()+"."+ext;
- const {error:up}=await db.storage.from("personal-music").upload(path,file,{contentType:file.type,upsert:false});
- if(up){showMessage("فشل الرفع: "+up.message);btn.disabled=false;return}
- const {error:ins}=await db.from("personal_music").insert({user_id:currentUser.id,title,file_path:path});
- if(ins){await db.storage.from("personal-music").remove([path]);showMessage("فشل الحفظ: "+ins.message);btn.disabled=false;return}
- musicInput.value="";await showMyMusic();showMessage("تمت إضافة الموسيقى 🎵");
+ const {error:up}=await db.storage.from("personal-music")
+  .upload(path,file,{contentType:file.type,upsert:false});
+ if(up){
+  musicMessage("فشل الرفع: "+up.message);
+  button.disabled=false;
+  musicInput.value="";
+  return;
+ }
+ const {error:ins}=await db.from("personal_music").insert({
+  user_id:currentUser.id,title,file_path:path
+ });
+ if(ins){
+  await db.storage.from("personal-music").remove([path]);
+  musicMessage("فشل حفظ الموسيقى: "+ins.message);
+  button.disabled=false;
+  musicInput.value="";
+  return;
+ }
+ musicInput.value="";
+ await loadMyMusic();
+ musicMessage("تمت إضافة الموسيقى مباشرة إلى قائمتك 🎵");
+ button.disabled=false;
 };
-
 accountButton.onclick=()=>showProfile();
 db.auth.onAuthStateChange(async(_event,session)=>{
  await updateUser(session?.user||null);
