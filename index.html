@@ -470,7 +470,7 @@ async function showMyMusic(){
 }
 let musicLoadVersion=0;
 function isMp4Track(track){
- return /\\.mp4$/i.test(track.file_path||"");
+ return /\.mp4$/i.test(track.file_path||"");
 }
 async function loadMyMusic(){
  const list=document.getElementById("musicList");
