@@ -97,7 +97,7 @@ header{position:fixed;top:0;width:100%;height:60px;z-index:1000;display:flex;ali
 <button id="accountButton">👤</button>
 <button id="soundButton">🔇 الصوت مغلق</button>
 <button id="musicButton">🎵 موسيقاي</button>
-<input id="musicInput" type="file" accept="audio/*" style="display:none">
+<input id="musicInput" type="file" accept="audio/*,video/mp4,.mp4" style="display:none">
 <section id="musicPage">
  <div class="music-page-head">
   <button class="music-page-btn" id="closeMusicPage">رجوع ✕</button>
@@ -522,7 +522,7 @@ musicInput.onchange=async()=>{
  const file=musicInput.files&&musicInput.files[0];
  if(!file)return;
  if(!currentUser){musicInput.value="";showAuth();return}
- if(!file.type.startsWith("audio/")){
+ if(!file.type.startsWith("audio/") && file.type!=="video/mp4" && !file.name.toLowerCase().endsWith(".mp4")){
   musicMessage("اختار ملف صوتي فقط");
   musicInput.value="";
   return;
