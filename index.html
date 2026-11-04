@@ -92,7 +92,6 @@ header{position:fixed;top:0;width:100%;height:60px;z-index:1000;display:flex;ali
  <div class="tab active" data-tab="all">لك</div>
  <div class="tab" data-tab="anime">أنمي</div>
  <div class="tab" data-tab="movies">أفلام</div>
- <div class="tab" data-tab="stories">قصص</div>
 </div></header>
 
 <button id="accountButton">👤</button>
@@ -158,7 +157,7 @@ const oldVideos=[
  "https://cdn.rapidfile.cc/XoIS5tzlFp/video5.mp4"
 ];
 
-const animeVideos=[],movieVideos=[],storyVideos=[];
+const animeVideos=[],movieVideos=[];
 
 function openModal(){modal.style.display="flex"}
 function closeModal(){modal.style.display="none"}
@@ -939,25 +938,6 @@ function getVideoStoragePath(url){
  }catch(e){return null}
 }
 
-function createDriveStory(fileId,title){
- const card=document.createElement("section");
- card.className="video-card";
- card.dataset.category="stories";
- const frame=document.createElement("iframe");
- frame.src="https://drive.google.com/file/d/"+encodeURIComponent(fileId)+"/preview";
- frame.title=title||"قصة";
- frame.style.cssText="width:100%;height:100%;border:0;background:#000";
- frame.allow="autoplay";
- frame.allowFullscreen=true;
- const info=document.createElement("div");
- info.className="video-info";
- const heading=document.createElement("p");
- heading.textContent=title||"قصة";
- info.appendChild(heading);
- card.append(frame,info);
- return card;
-}
-
 function createCard(url,description="",category="all",item=null){
  const card=document.createElement("section");
  card.className="video-card";
@@ -1128,10 +1108,6 @@ async function loadVideos(){
  movieVideos.forEach(v=>feed.appendChild(
   createCard(v.url,v.description||"","movies")
  ));
- storyVideos.forEach(v=>feed.appendChild(
-  createCard(v.url,v.description||"","stories")
- ));
- feed.appendChild(createDriveStory("1UWeDmTiinR0pQOfnaw8Dbe6eDsBN5e7c","قصة يوتيوبر"));
 
  if(observer)observer.disconnect();
 
