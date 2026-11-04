@@ -77,11 +77,12 @@ header{position:fixed;top:0;width:100%;height:60px;z-index:1000;display:flex;ali
 .music-page-btn{border:0;border-radius:12px;padding:11px 13px;font-weight:bold;color:white;background:#292929}
 #addMusicButton{background:#fe2c55;white-space:nowrap}
 #musicPageContent{max-width:650px;margin:18px auto}
-.music-track{display:flex;gap:9px;align-items:center;background:#202020;border:1px solid #333;padding:12px;margin:10px 0;border-radius:13px}
+.music-track{display:flex;flex-wrap:wrap;gap:9px;align-items:center;background:#202020;border:1px solid #333;padding:12px;margin:10px 0;border-radius:13px}
 .music-track-name{flex:1;min-width:0;overflow-wrap:anywhere;font-size:14px}
 .music-track button{width:auto;margin:0;padding:9px 12px}
+.music-preview{width:100%;max-height:210px;object-fit:contain;background:#000;border-radius:9px}
 #musicPlayer{margin:14px 0}
-#musicPlayer audio{width:100%}
+#musicPlayer audio,#musicPlayer video{width:100%;max-height:65dvh;background:#000;border-radius:10px}
 
 </style>
 </head>
@@ -467,56 +468,96 @@ async function showMyMusic(){
  musicPage.style.display="block";
  await loadMyMusic();
 }
+let musicLoadVersion=0;
+function isMp4Track(track){
+ return /\\.mp4$/i.test(track.file_path||"");
+}
 async function loadMyMusic(){
  const list=document.getElementById("musicList");
  if(!list||!currentUser)return;
+ const loadVersion=++musicLoadVersion;
+ const userId=currentUser.id;
  list.innerHTML="<p class='note'>جاري تحميل الموسيقى...</p>";
- const {data,error}=await db.from("personal_music")
-  .select("id,title,file_path").eq("user_id",currentUser.id)
-  .order("created_at",{ascending:false});
- if(error){list.textContent="تعذر التحميل: "+error.message;return}
- list.innerHTML="";
- if(!data?.length){list.innerHTML="<p class='note'>ما ضفتش موسيقى لحد الآن. اضغط إضافة موسيقى للبدء.</p>";return}
- data.forEach(track=>{
-  const row=document.createElement("div");
-  row.className="music-track";
-  const name=document.createElement("span");
-  name.className="music-track-name";
-  name.textContent=track.title||"موسيقى";
-  const play=document.createElement("button");
-  play.textContent="▶ تشغيل";
-  play.className="action";
-  play.onclick=async()=>{
-   const {data:s,error:e}=await db.storage.from("personal-music").createSignedUrl(track.file_path,3600);
-   if(e){musicMessage("تعذر تشغيل الملف: "+e.message);return}
-   if(personalAudio)personalAudio.pause();
-   const area=document.getElementById("musicPlayer");
-   area.innerHTML="";
-   personalAudio=document.createElement("audio");
-   personalAudio.controls=true;
-   personalAudio.src=s.signedUrl;
-   area.appendChild(personalAudio);
-   await personalAudio.play().catch(()=>{});
-   musicMessage("يتم تشغيل: "+(track.title||"موسيقى"));
-  };
-  const del=document.createElement("button");
-  del.textContent="حذف";
-  del.className="action secondary";
-  del.onclick=async()=>{
-   if(!confirm("تحذف الموسيقى؟"))return;
-   del.disabled=true;
-   const {error:e}=await db.storage.from("personal-music").remove([track.file_path]);
-   if(e){musicMessage("تعذر حذف الملف: "+e.message);del.disabled=false;return}
-   const {error:d}=await db.from("personal_music").delete()
-    .eq("id",track.id).eq("user_id",currentUser.id);
-   if(d){musicMessage("تعذر حذف سجل الموسيقى: "+d.message);del.disabled=false;return}
-   if(personalAudio){personalAudio.pause();personalAudio=null;document.getElementById("musicPlayer").innerHTML=""}
-   await loadMyMusic();
-   musicMessage("تم حذف الموسيقى");
-  };
-  row.append(name,play,del);
-  list.appendChild(row);
- });
+ try{
+  const {data,error}=await db.from("personal_music")
+   .select("id,title,file_path").eq("user_id",userId)
+   .order("created_at",{ascending:false});
+  if(loadVersion!==musicLoadVersion)return;
+  if(error){list.textContent="تعذر تحميل القائمة: "+error.message;return}
+  list.innerHTML="";
+  if(!data?.length){list.innerHTML="<p class='note'>ما ضفتش موسيقى لحد الآن. اضغط إضافة موسيقى للبدء.</p>";return}
+  for(const track of data){
+   const row=document.createElement("div");
+   row.className="music-track";
+   const name=document.createElement("span");
+   name.className="music-track-name";
+   name.textContent=(isMp4Track(track)?"🎬 ":"🎵 ")+(track.title||"موسيقى");
+   row.appendChild(name);
+   if(isMp4Track(track)){
+    const preview=document.createElement("video");
+    preview.className="music-preview";
+    preview.controls=true;
+    preview.playsInline=true;
+    preview.preload="metadata";
+    preview.muted=true;
+    const {data:signed,error:signedError}=await db.storage.from("personal-music").createSignedUrl(track.file_path,3600);
+    if(loadVersion!==musicLoadVersion)return;
+    if(signedError){
+     const note=document.createElement("p");
+     note.className="note";
+     note.textContent="تعذر عرض معاينة الفيديو";
+     row.appendChild(note);
+    }else{
+     preview.src=signed.signedUrl;
+     preview.addEventListener("error",()=>musicMessage("تعذر عرض الفيديو. تأكد من صيغة الملف وترميز الصوت والفيديو."));
+     row.appendChild(preview);
+    }
+   }
+   const play=document.createElement("button");
+   play.textContent="▶ تشغيل";
+   play.className="action";
+   play.onclick=async()=>{
+    play.disabled=true;
+    try{
+     const {data:signed,error:e}=await db.storage.from("personal-music").createSignedUrl(track.file_path,3600);
+     if(e){musicMessage("تعذر تشغيل الملف: "+e.message);return}
+     if(personalAudio){personalAudio.pause();personalAudio.removeAttribute("src");personalAudio.load()}
+     const area=document.getElementById("musicPlayer");
+     area.innerHTML="";
+     personalAudio=document.createElement(isMp4Track(track)?"video":"audio");
+     personalAudio.controls=true;
+     personalAudio.playsInline=true;
+     personalAudio.preload="metadata";
+     personalAudio.src=signed.signedUrl;
+     area.appendChild(personalAudio);
+     try{await personalAudio.play();musicMessage("يتم تشغيل: "+(track.title||"موسيقى"))}
+     catch(playError){musicMessage("اضغط زر التشغيل داخل المشغل لبدء الملف.")}
+    }catch(err){musicMessage("صار خطأ أثناء التشغيل: "+err.message)}
+    finally{play.disabled=false}
+   };
+   const del=document.createElement("button");
+   del.textContent="حذف";
+   del.className="action secondary";
+   del.onclick=async()=>{
+    if(!confirm("تحذف الموسيقى؟"))return;
+    del.disabled=true;
+    try{
+     const {error:e}=await db.storage.from("personal-music").remove([track.file_path]);
+     if(e){musicMessage("تعذر حذف الملف: "+e.message);del.disabled=false;return}
+     const {error:d}=await db.from("personal_music").delete()
+      .eq("id",track.id).eq("user_id",userId);
+     if(d){musicMessage("تعذر حذف سجل الموسيقى: "+d.message);del.disabled=false;return}
+     if(personalAudio){personalAudio.pause();personalAudio=null;document.getElementById("musicPlayer").innerHTML=""}
+     await loadMyMusic();
+     musicMessage("تم حذف الملف");
+    }catch(err){musicMessage("صار خطأ أثناء الحذف: "+err.message);del.disabled=false}
+   };
+   row.append(play,del);
+   list.appendChild(row);
+  }
+ }catch(err){
+  if(loadVersion===musicLoadVersion)list.textContent="تعذر تحميل القائمة: "+err.message;
+ }
 }
 musicInput.onchange=async()=>{
  const file=musicInput.files&&musicInput.files[0];
