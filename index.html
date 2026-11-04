@@ -577,7 +577,8 @@ musicInput.onchange=async()=>{
  button.disabled=true;
  musicMessage("جاري رفع الموسيقى وإضافتها...");
  const title=file.name.replace(/\.[^.]+$/,"");
- const ext=(file.name.split(".").pop()||"mp3").toLowerCase().replace(/[^a-z0-9]/g,"");
+ const isVideoFile=file.type==="video/mp4" || /\.mp4$/i.test(file.name);
+ const ext=isVideoFile ? "mp4" : ((file.name.split(".").pop()||"mp3").toLowerCase().replace(/[^a-z0-9]/g,""));
  const path=currentUser.id+"/"+crypto.randomUUID()+"."+ext;
  const {error:up}=await db.storage.from("personal-music")
   .upload(path,file,{contentType:file.type,upsert:false});
