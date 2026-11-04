@@ -939,21 +939,20 @@ function getVideoStoragePath(url){
  }catch(e){return null}
 }
 
-function createYouTubeStory(videoId,title){
+function createDriveStory(fileId,title){
  const card=document.createElement("section");
  card.className="video-card";
  card.dataset.category="stories";
  const frame=document.createElement("iframe");
- frame.src="https://www.youtube-nocookie.com/embed/"+encodeURIComponent(videoId)+"?playsinline=1&rel=0";
+ frame.src="https://drive.google.com/file/d/"+encodeURIComponent(fileId)+"/preview";
  frame.title=title||"قصة";
  frame.style.cssText="width:100%;height:100%;border:0;background:#000";
- frame.allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share";
+ frame.allow="autoplay";
  frame.allowFullscreen=true;
- frame.referrerPolicy="strict-origin-when-cross-origin";
  const info=document.createElement("div");
  info.className="video-info";
  const heading=document.createElement("p");
- heading.textContent=title||"قصة يوتيوبر";
+ heading.textContent=title||"قصة";
  info.appendChild(heading);
  card.append(frame,info);
  return card;
@@ -1132,7 +1131,7 @@ async function loadVideos(){
  storyVideos.forEach(v=>feed.appendChild(
   createCard(v.url,v.description||"","stories")
  ));
- feed.appendChild(createYouTubeStory("0PXjvwY0SHQ","قصة يوتيوبر"));
+ feed.appendChild(createDriveStory("1UWeDmTiinR0pQOfnaw8Dbe6eDsBN5e7c","قصة يوتيوبر"));
 
  if(observer)observer.disconnect();
 
