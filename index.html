@@ -92,6 +92,7 @@ header{position:fixed;top:0;width:100%;height:60px;z-index:1000;display:flex;ali
  <div class="tab active" data-tab="all">لك</div>
  <div class="tab" data-tab="anime">أنمي</div>
  <div class="tab" data-tab="movies">أفلام</div>
+ <div class="tab" data-tab="stories">قصص</div>
 </div></header>
 
 <button id="accountButton">👤</button>
@@ -1128,6 +1129,11 @@ async function loadVideos(){
 
 function applyTab(category){
  currentTab=category;
+ const hideControls=category==="stories";
+ ["accountButton","soundButton","musicButton","uploadButton"].forEach(id=>{
+  const control=document.getElementById(id);
+  if(control)control.style.display=hideControls?"none":"";
+ });
  stopAllVideos();
  activeVideo=null;
  feed.scrollTop=0;
