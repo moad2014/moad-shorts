@@ -5,8 +5,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MOAD SHORTS</title>
-<link rel="manifest" href="./manifest.json">
-<meta name="theme-color" content="#000000">
+<link rel="manifest" href="./manifest.json">\n<link rel="icon" href="data:,">
+<meta name="theme-color" content="#000000">\n<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
@@ -23,12 +23,18 @@ header{position:fixed;top:0;width:100%;height:60px;z-index:1000;display:flex;ali
 #feed::-webkit-scrollbar{display:none}
 .video-card{width:100%;height:100vh;height:100dvh;position:relative;scroll-snap-align:start;background:#000;display:flex;justify-content:center;align-items:center}
 .video-card video{width:100%;height:100%;object-fit:contain;background:black}
-.story-home{justify-content:center;align-items:center}
-.story-tile{width:142px;height:158px;border:1px solid #444;border-radius:16px;background:#191919;color:white;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;font-size:15px;font-weight:bold;cursor:pointer;box-shadow:0 5px 20px #0008}
-.story-tile img{width:88px;height:88px;border-radius:12px;object-fit:cover;background:#333}
-.story-tile .story-placeholder{width:88px;height:88px;border-radius:12px;background:linear-gradient(135deg,#fe2c55,#692cff);display:flex;align-items:center;justify-content:center;font-size:38px}
-.story-back{position:absolute;top:18px;right:15px;z-index:10;border:0;border-radius:20px;padding:9px 15px;background:#222;color:white;font-size:14px}
-.story-player{position:absolute;inset:0;width:100%;height:100%;border:0;background:#000}
+
+.story-home{height:100dvh;min-height:100dvh;justify-content:flex-start;align-items:stretch;padding:88px 14px 100px;scroll-snap-align:start}
+.story-grid{display:flex;justify-content:flex-start;direction:rtl;align-items:flex-start}
+.story-tile{width:108px;height:126px;border:1px solid #444;border-radius:14px;background:#111;color:white;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;font-size:14px;font-weight:bold;cursor:pointer;box-shadow:0 4px 16px #0008;padding:8px}
+.story-tile img{width:82px;height:82px;border-radius:10px;object-fit:cover;background:#222}
+.story-back{position:absolute;top:68px;right:14px;z-index:10;border:0;border-radius:20px;padding:8px 13px;background:#222;color:white;font-size:14px}
+.bottom-nav{position:fixed;bottom:10px;left:12px;right:12px;z-index:4000;height:76px;display:flex;align-items:center;justify-content:space-around;background:#080808ed;border:1px solid #292929;border-radius:20px;backdrop-filter:blur(12px);padding-bottom:env(safe-area-inset-bottom)}
+.bottom-nav button{flex:1;height:100%;border:0;background:transparent;color:#aaa;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;font-size:12px;font-weight:bold;cursor:pointer}
+.bottom-nav .nav-icon{font-size:23px;line-height:1;color:#aaa}
+.bottom-nav button.active,.bottom-nav button.active .nav-icon{color:#fe2c55}
+#feed{padding-bottom:90px}
+
 
 .play-button{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);border:0;background:#0008;color:white;font-size:45px;width:75px;height:75px;border-radius:50%;display:none}
 .video-card.paused .play-button{display:block}
@@ -122,6 +128,12 @@ header{position:fixed;top:0;width:100%;height:60px;z-index:1000;display:flex;ali
 <button id="uploadButton">＋ نشر فيديو</button>
 <input id="fileInput" type="file" accept="video/mp4,video/webm,video/quicktime">
 <input id="avatarInput" type="file" accept="image/*">
+<nav class="bottom-nav" id="bottomNav">
+ <button id="navHome" class="active"><span class="nav-icon">⌂</span><span>الرئيسية</span></button>
+ <button id="navSearch"><span class="nav-icon">⌕</span><span>بحث</span></button>
+ <button id="navAdd"><span class="nav-icon">＋</span><span>إضافة</span></button>
+ <button id="navAccount"><span class="nav-icon">♙</span><span>حسابي</span></button>
+</nav>
 <main id="feed"></main>
 
 <div id="modal"><div class="panel">
@@ -946,36 +958,39 @@ function getVideoStoragePath(url){
  }catch(e){return null}
 }
 
+const FARIS_PHOTO="data:image/jpeg;base64,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";
+function makeStoryTile(title){
+ const tile=document.createElement("button");
+ tile.className="story-tile";
+ const img=document.createElement("img");
+ img.src=FARIS_PHOTO;
+ img.alt="صورة قصص فارس";
+ const label=document.createElement("span");
+ label.textContent=title;
+ tile.append(img,label);
+ return tile;
+}
 function createStoryCollectionCard(){
  const card=document.createElement("section");
  card.className="video-card story-home";
  card.dataset.category="stories";
- const tile=document.createElement("button");
- tile.className="story-tile";
- const cover=document.createElement("div");
- cover.className="story-placeholder";
- cover.textContent="📖";
- const label=document.createElement("span");
- label.textContent="قصص فارس";
- tile.append(cover,label);
- card.appendChild(tile);
- tile.onclick=()=>{
-  tile.remove();
+ const grid=document.createElement("div");
+ grid.className="story-grid";
+ const first=makeStoryTile("قصص فارس");
+ grid.appendChild(first);
+ card.appendChild(grid);
+ first.onclick=()=>{
+  grid.innerHTML="";
+  const second=makeStoryTile("مين كان سبب ؟!");
+  grid.appendChild(second);
   const back=document.createElement("button");
   back.className="story-back";
   back.textContent="→ رجوع";
-  const frame=document.createElement("iframe");
-  frame.className="story-player";
-  frame.src="https://player.vimeo.com/video/1243599481?badge=0&autopause=0&title=0&byline=0&portrait=0&vimeo_logo=0&pip=0";
-  frame.title="قصص فارس";
-  frame.allow="autoplay; fullscreen; picture-in-picture";
-  frame.allowFullscreen=true;
-  frame.loading="eager";
-  card.append(frame,back);
+  card.appendChild(back);
   back.onclick=()=>{
-   frame.remove();
    back.remove();
-   card.appendChild(tile);
+   grid.innerHTML="";
+   grid.appendChild(first);
   };
  };
  return card;
@@ -1211,6 +1226,32 @@ document.querySelectorAll(".tab").forEach(tab=>{
   applyTab(tab.dataset.tab);
  };
 });
+
+
+document.getElementById("navHome").onclick=()=>{
+ document.querySelector('.tab[data-tab="all"]').click();
+ document.querySelectorAll(".bottom-nav button").forEach(b=>b.classList.remove("active"));
+ document.getElementById("navHome").classList.add("active");
+};
+document.getElementById("navAdd").onclick=()=>uploadButton.click();
+document.getElementById("navAccount").onclick=()=>accountButton.click();
+document.getElementById("navSearch").onclick=()=>{
+ openModal();
+ panelContent.innerHTML='<h2>بحث</h2><input id="siteSearchInput" placeholder="ابحث في وصف الفيديوهات..." /><p class="note">اكتب كلمة للبحث في الفيديوهات المنشورة.</p><button class="action secondary" id="clearSiteSearch">مسح البحث</button>';
+ const input=document.getElementById("siteSearchInput");
+ input.oninput=()=>{
+  const q=input.value.trim().toLowerCase();
+  document.querySelectorAll("#feed .video-card").forEach(card=>{
+   const match=!q||card.textContent.toLowerCase().includes(q);
+   card.style.display=match?"flex":"none";
+  });
+ };
+ document.getElementById("clearSiteSearch").onclick=()=>{input.value="";input.oninput();};
+};
+document.querySelectorAll(".tab").forEach(tab=>tab.addEventListener("click",()=>{
+ document.querySelectorAll(".bottom-nav button").forEach(b=>b.classList.remove("active"));
+ if(tab.dataset.tab==="all")document.getElementById("navHome").classList.add("active");
+}));
 
 soundButton.onclick=()=>{
  soundEnabled=!soundEnabled;
