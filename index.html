@@ -939,19 +939,17 @@ function getVideoStoragePath(url){
  }catch(e){return null}
 }
 
-function createDriveStory(videoId,title){
+function createVimeoStory(videoId,title){
  const card=document.createElement("section");
  card.className="video-card";
  card.dataset.category="stories";
  const frame=document.createElement("iframe");
- const embedUrl="https://anonmp4.art/embed/"+encodeURIComponent(videoId);
- frame.src=embedUrl+(embedUrl.includes("?")?"&":"?")+"v="+Date.now();
+ frame.src="https://player.vimeo.com/video/"+encodeURIComponent(videoId)+"?badge=0&autopause=0";
  frame.title=title||"قصة";
- frame.style.cssText="width:100%;height:100%;border:0;background:#000";
+ frame.style.cssText="position:absolute;inset:0;width:100%;height:100%;border:0;background:#000";
  frame.allow="autoplay; fullscreen; picture-in-picture";
  frame.allowFullscreen=true;
  frame.loading="eager";
- frame.referrerPolicy="strict-origin-when-cross-origin";
  const info=document.createElement("div");
  info.className="video-info";
  const heading=document.createElement("p");
@@ -1131,7 +1129,7 @@ async function loadVideos(){
  movieVideos.forEach(v=>feed.appendChild(
   createCard(v.url,v.description||"","movies")
  ));
- feed.appendChild(createDriveStory("NsZoqdCo73OO5be","قصة يوتيوبر"));
+ feed.appendChild(createVimeoStory("1243599481","قصة يوتيوبر"));
 
  if(observer)observer.disconnect();
 
